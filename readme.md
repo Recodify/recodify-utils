@@ -1,6 +1,8 @@
-# System Utils
+# Recodify Utils
 
 A collection of command-line utilities designed to help system administrators and developers with common tasks, diagnostics, and performance measurements.
+
+![main](./images/utilities.png)
 
 ## Available Tools
 
