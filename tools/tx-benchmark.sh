@@ -9,8 +9,15 @@ usage() {
     echo "  -m, --multiple          Run multiple small files tests (default: false)"
     echo "  -v, --verbose           Verbose output (default: false)"
     echo "  -h, --help              Show this help message"
+    echo "  -l, --local             Skip mount point check for local/USB drives (default: false)"
     echo "  -q, --quiet             Quiet output, show results only (default: false)"
-    exit 1
+
+    # Exit with 0 if help was requested, 1 if usage was shown due to an error
+    if [ "$1" = "help" ]; then
+        exit 0
+    else
+        exit 1
+    fi
 }
 
 TEST_DIR=""
@@ -19,6 +26,8 @@ SINGLE_FILE="false"
 MULTIPLE_SMALL_FILES="false"
 VERBOSE="false"
 QUIET="false"
+LOCAL_DRIVE="false"
+
 while [ $# -gt 0 ]; do
     case "$1" in
         -d|--directory)
@@ -37,12 +46,16 @@ while [ $# -gt 0 ]; do
             MULTIPLE_SMALL_FILES="true"
             shift
             ;;
+        -l|--local)
+            LOCAL_DRIVE="true"
+            shift
+            ;;
         -v|--verbose)
             VERBOSE="true"
             shift
             ;;
         -h|--help)
-            usage
+            usage "help"
             ;;
         -q|--quiet)
             QUIET="true"
@@ -70,6 +83,22 @@ if [ -z "$TEST_DIR" ]; then
     usage
 fi
 
+# Add permission check before proceeding
+if ! mkdir -p "$TEST_DIR" 2>/dev/null; then
+    echo "Error: Cannot create directory in $TEST_DIR"
+    echo "Please check permissions or run with sudo"
+    exit 1
+fi
+
+# Test write permissions with a small file
+TEST_WRITE_FILE="$TEST_DIR/.write_test"
+if ! touch "$TEST_WRITE_FILE" 2>/dev/null; then
+    echo "Error: Cannot write to $TEST_DIR"
+    echo "Please check permissions or run with sudo"
+    exit 1
+fi
+rm -f "$TEST_WRITE_FILE"
+
 if [ -n "$FILE_SIZES_ARG" ]; then
     IFS=',' read -ra FILE_SIZES <<< "$FILE_SIZES_ARG"
 else
@@ -81,7 +110,20 @@ TEST_FILE_PREFIX="speedtest"
 
 TEST_PATH="${TEST_DIR}/speedtest_$(date +%s)"
 SMALL_FILES_PATH="${TEST_PATH}/small_files"
-mkdir -p "$TEST_PATH" "$SMALL_FILES_PATH"
+if ! mkdir -p "$TEST_PATH" "$SMALL_FILES_PATH"; then
+    echo "Error: Cannot create test directories in $TEST_DIR"
+    echo "Please check permissions or run with sudo"
+    exit 1
+fi
+
+if [ "$LOCAL_DRIVE" = "false" ]; then
+    if ! mountpoint -q "$TEST_DIR"; then
+        echo "Error: $TEST_DIR is not a valid mount point"
+        echo "Please check if your NAS is properly mounted"
+        echo "Use --local flag to skip this check for local/USB drives"
+        exit 1
+    fi
+fi
 
 declare -a read_speeds
 declare -a write_speeds
