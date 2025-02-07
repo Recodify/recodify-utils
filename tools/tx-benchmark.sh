@@ -3,14 +3,16 @@
 usage() {
     echo "Usage: $0 -d <mount_directory> [--directory] [-f <sizes>] [--file-sizes] [-s] [--single] [-m] [--multiple] [-v] [--verbose]"
     echo "Options:"
-    echo "  -d, --directory <dir>    Mount directory to test"
+    echo "  -t, --target <dir>       Target directory to test"
+    echo "  -dt, --dirty-target      Do not clean/remove test files from the target, useful for verfication (default: false)"
+    echo "  -ds, --dirty-source      Do not clean/remove test files from the source, useful for verfication (default: false)"
     echo "  -f, --file-sizes <sizes> Comma-separated list of sizes (e.g., '100M,500M,1G')"
-    echo "  -s, --single            Run single file tests (default: false)"
-    echo "  -m, --multiple          Run multiple small files tests (default: false)"
-    echo "  -v, --verbose           Verbose output (default: false)"
-    echo "  -h, --help              Show this help message"
-    echo "  -l, --local             Skip mount point check for local/USB drives (default: false)"
-    echo "  -q, --quiet             Quiet output, show results only (default: false)"
+    echo "  -s, --single             Run single file tests (default: false)"
+    echo "  -m, --multiple           Run multiple small files tests (default: false)"
+    echo "  -v, --verbose            Verbose output (default: false)"
+    echo "  -h, --help               Show this help message"
+    echo "  -l, --local              Skip mount point check for local/USB drives (default: false)"
+    echo "  -q, --quiet              Quiet output, show results only (default: false)"
 
     # Exit with 0 if help was requested, 1 if usage was shown due to an error
     if [ "$1" = "help" ]; then
@@ -27,10 +29,16 @@ MULTIPLE_SMALL_FILES="false"
 VERBOSE="false"
 QUIET="false"
 LOCAL_DRIVE="false"
+DIRTY_TARGET="false"
+DIRTY_SOURCE="false"
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        -d|--directory)
+        -dt|--dirty-target)
+            DIRTY_TARGET="true"
+            shift
+            ;;
+        -t|--target)
             TEST_DIR="$2"
             shift 2
             ;;
@@ -242,6 +250,11 @@ single_file_tests(){
             false \
             "$size")"
         read_speeds+=("$speed")
+
+        # Clean up source (temporary) files
+        if [ "$DIRTY_SOURCE" = "false" ]; then
+            rm -f "/tmp/readtest_${size}"
+        fi
     done
     log "      Single File Tests Complete"
 }
@@ -259,10 +272,7 @@ multiple_small_files_tests(){
         done
     done
 
-
-
     log_verbose "  Testing writes..."
-
     for size in "${FILE_SIZES[@]}"; do
         speed="$(test_transfer "write speed with multiple files totaling ${size}" \
             "/tmp/small_${size}" \
@@ -270,12 +280,9 @@ multiple_small_files_tests(){
             true \
             "$size")"
         small_write_speeds+=("$speed")
-
     done
 
-
     log_verbose "  Testing reads..."
-
     for size in "${FILE_SIZES[@]}"; do
         speed="$(test_transfer "read speed with multiple files totaling ${size}" \
             "${SMALL_FILES_PATH}/small_${size}" \
@@ -284,9 +291,13 @@ multiple_small_files_tests(){
             "$size")"
         small_read_speeds+=("$speed")
 
+        # Clean up source (temporary) files
+        if [ "$DIRTY_SOURCE" = "false" ]; then
+            rm -rf "/tmp/readtest_small_${size}"
+        fi
     done
 
-    log "      Single File Tests Complete"
+    log "      Multiple Files Tests Complete"
 }
 
 print_speed() {
@@ -395,10 +406,16 @@ if [ "$VERBOSE" = "true" ]; then
     info
 fi
 
-# CLEANUP
-log -e "\nCleaning up..."
-rm -rf /tmp/${TEST_FILE_PREFIX}_* /tmp/readtest_* /tmp/small_* "/tmp/readtest_small_"*
-rm -rf "$TEST_PATH"
+if [ "$DIRTY_SOURCE" = "false" ]; then
+    log -e "\nCleaning up local source files..."
+    rm -rf /tmp/${TEST_FILE_PREFIX}_* /tmp/readtest_* /tmp/small_* "/tmp/readtest_small_"*
+fi
 
+echo "DIRTY_TARGET: $DIRTY_TARGET"
+echo "TEST_PATH: $TEST_PATH"
+if [ "$DIRTY_TARGET" = "false" ]; then
+    log -e "\nCleaning up remote files..."
+    rm -rf "$TEST_PATH"
+fi
 
 log -e "\nTest complete!"
