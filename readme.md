@@ -1,16 +1,17 @@
 # Recodify Utils
 
+![main](./images/utilities.png)
+
 A collection of command-line utilities designed to help system administrators and developers with common tasks, diagnostics, and performance measurements.
 
-![main](./images/utilities.png)
 
 ## Available Tools
 
-### tx-benchmark
+## | tx-benchmark - File Transfer Benchmarking Tool
 
 A file transfer benchmarking tool that measures read and write performance across different file sizes and scenarios.
 
-#### Features
+### Features
 
 - Single large file performance testing
 - Multiple small files performance testing
@@ -19,7 +20,7 @@ A file transfer benchmarking tool that measures read and write performance acros
 - Verbose mode for detailed timings
 - Clean, tabulated output format
 
-#### Usage
+### Usage
 
 ```bash
 sudo ./tx-benchmark.sh -d <mount_directory> [options]
@@ -35,7 +36,7 @@ Options:
 
 NOTE: You need to run the script with sudo privileges.
 
-#### Example Commands
+### Example Commands
 
 ```bash
 # Run both single and multiple file tests with default sizes
@@ -48,9 +49,7 @@ NOTE: You need to run the script with sudo privileges.
 ./tx-benchmark.sh -d /mnt/test -m
 ```
 
-#### Example Output
-
-
+### Example Output
 
 ``` bash
 sudo ./tools/tx-benchmark.sh -d /mnt/test  -s -m
@@ -103,7 +102,7 @@ The tool provides a tabulated summary of all tests, including:
 - Speed: Transfer speed in MB/s
 - Time: Operation duration (and detailed timing in verbose mode)
 -
-#### Understanding Time Measurements
+### Understanding Time Measurements
 
 When analyzing the results when verbose is enabled, you'll see three time measurements for each operation:
 
@@ -117,6 +116,51 @@ When interpreting network file transfers:
 - High 'real' time but low 'user'+'sys' time usually indicates a network/disk bottleneck
 - High 'sys' time might indicate protocol overhead or CPU-intensive compression
 - Small files typically show higher 'sys' time due to more file operations
+
+## | mnt-forever - Mount Forever
+
+A utility script for easily setting up and managing NFS and SMB mounts with automatic configuration and persistence.
+
+### Features
+
+- Supports both NFS and SMB/CIFS mounts
+- Automatic fstab entry creation
+- Credentials management for SMB shares
+- User-friendly mount point creation
+- Automatic dependency installation
+- Mount testing and verification
+- Persistent mounting across system reboots
+
+### Usage
+
+```bash
+sudo ./mount-setup.sh -t <type> -s <server> -r <remote_path> -m <mount_point> [-u <username>] [-p <password>]
+
+Options:
+  -t, --type <type>        Mount type (nfs/smb)
+  -s, --server <server>    Server address
+  -r, --remote <path>      Remote path/share
+  -m, --mount <path>       Local mount point
+  -u, --user <username>    Username (for SMB)
+  -p, --pass <password>    Password (for SMB)
+  -h, --help              Show this help message
+```
+
+NOTE: You need to run the script with sudo privileges.
+
+### Example Commands
+
+```bash
+# Set up an NFS mount
+sudo ./mount-setup.sh -t nfs -s fileserver.local -r /exports/data -m /mnt/data
+
+# Set up an SMB mount with authentication
+sudo ./mount-setup.sh -t smb -s fileserver.local -r /shared -m /mnt/shared -u myuser -p mypassword
+
+# Set up a guest SMB mount
+sudo ./mount-setup.sh -t smb -s fileserver.local -r /public -m /mnt/public
+```
+
 
 ## Installation
 
