@@ -117,6 +117,58 @@ When interpreting network file transfers:
 - High 'sys' time might indicate protocol overhead or CPU-intensive compression
 - Small files typically show higher 'sys' time due to more file operations
 
+## | github-pullrequest - GitHub PR Helper
+
+A utility script for quickly opening GitHub pull request creation pages directly from the command line or by sourcing into your shell environment.
+
+### Features
+
+- Automatic GitHub repository detection from git remotes
+- Smart base branch detection (main, master, develop)
+- Support for both SSH and HTTPS remote formats  
+- URL encoding for branch names with special characters
+- Can be used as standalone script or sourced into .bashrc
+- Cross-platform browser opening (Linux/macOS)
+
+### Usage
+
+```bash
+# As standalone script
+./github-pullrequest.sh [base_branch] [head_branch]
+
+# Or source into .bashrc for global 'pr' command
+source /path/to/github-pullrequest.sh
+pr [base_branch] [head_branch]
+
+Options:
+  base_branch    Target branch for the PR (default: auto-detected from remote HEAD)
+  head_branch    Source branch for the PR (default: current branch)
+  -h, --help     Show help message
+```
+
+### Example Commands
+
+```bash
+# Create PR from current branch to default branch
+pr
+
+# Create PR from current branch to develop
+pr develop
+
+# Create PR from feature/foo to main
+pr main feature/foo
+
+# Show help
+pr --help
+```
+
+### Installation for Shell Integration
+
+Add to your .bashrc or .zshrc:
+```bash
+source /path/to/recodify-utils/devex/github-pullrequest.sh
+```
+
 ## | mnt-forever - Mount Forever
 
 A utility script for easily setting up and managing NFS and SMB mounts with automatic configuration and persistence.
