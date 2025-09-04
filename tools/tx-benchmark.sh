@@ -1,7 +1,9 @@
 #!/bin/bash
 
-usage() {
-    echo "Usage: $0 -d <mount_directory> [--directory] [-f <sizes>] [--file-sizes] [-s] [--single] [-m] [--multiple] [-v] [--verbose]"
+txbm_usage() {
+    echo "Recodify txbm - File Transfer Benchmarking Tool - https://github.com/recodify/recodify-utils"
+    echo ""
+    echo "Usage: txbm -t <target_directory> [options]"
     echo "Options:"
     echo "  -t, --target <dir>       Target directory to test"
     echo "  -dt, --dirty-target      Do not clean/remove test files from the target, useful for verfication (default: false)"
@@ -16,11 +18,18 @@ usage() {
 
     # Exit with 0 if help was requested, 1 if usage was shown due to an error
     if [ "$1" = "help" ]; then
-        exit 0
+        return 0
     else
-        exit 1
+        return 1
     fi
 }
+
+txbm() {
+    # Show usage if no arguments provided
+    if [ $# -eq 0 ]; then
+        txbm_usage
+        return 1
+    fi
 
 TEST_DIR=""
 FILE_SIZES_ARG=""
@@ -63,7 +72,8 @@ while [ $# -gt 0 ]; do
             shift
             ;;
         -h|--help)
-            usage "help"
+            txbm_usage "help"
+            return 1
             ;;
         -q|--quiet)
             QUIET="true"
@@ -71,31 +81,35 @@ while [ $# -gt 0 ]; do
             ;;
         *)
             echo "Unknown option: $1"
-            usage
+            txbm_usage
+            return 1
             ;;
     esac
 done
 
 if [ "$QUIET" = "true" ] && [ "$VERBOSE" = "true" ]; then
     echo "Error: Cannot be quiet and verbose at the same time"
-    usage
+    txbm_usage
+    return 1
 fi
 
 if [ "$SINGLE_FILE" = "false" ] && [ "$MULTIPLE_SMALL_FILES" = "false" ]; then
     echo "Error: Must run at least one test. Choose --single or --multiple"
-    usage
+    txbm_usage
+    return 1
 fi
 
 if [ -z "$TEST_DIR" ]; then
-    echo "Error: Mount directory (-d) is required"
-    usage
+    echo "Error: Target directory (-t|--target) is required"
+    txbm_usage
+    return 1
 fi
 
 # Add permission check before proceeding
 if ! mkdir -p "$TEST_DIR" 2>/dev/null; then
     echo "Error: Cannot create directory in $TEST_DIR"
     echo "Please check permissions or run with sudo"
-    exit 1
+    return 1
 fi
 
 # Test write permissions with a small file
@@ -103,7 +117,7 @@ TEST_WRITE_FILE="$TEST_DIR/.write_test"
 if ! touch "$TEST_WRITE_FILE" 2>/dev/null; then
     echo "Error: Cannot write to $TEST_DIR"
     echo "Please check permissions or run with sudo"
-    exit 1
+    return 1
 fi
 rm -f "$TEST_WRITE_FILE"
 
@@ -121,7 +135,7 @@ SMALL_FILES_PATH="${TEST_PATH}/small_files"
 if ! mkdir -p "$TEST_PATH" "$SMALL_FILES_PATH"; then
     echo "Error: Cannot create test directories in $TEST_DIR"
     echo "Please check permissions or run with sudo"
-    exit 1
+    return 1
 fi
 
 if [ "$LOCAL_DRIVE" = "false" ]; then
@@ -129,7 +143,7 @@ if [ "$LOCAL_DRIVE" = "false" ]; then
         echo "Error: $TEST_DIR is not a valid mount point"
         echo "Please check if your NAS is properly mounted"
         echo "Use --local flag to skip this check for local/USB drives"
-        exit 1
+        return 1
     fi
 fi
 
@@ -419,3 +433,10 @@ if [ "$DIRTY_TARGET" = "false" ]; then
 fi
 
 log -e "\nTest complete!"
+
+}
+
+# If script is run directly (not sourced), execute the function
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    txbm "$@"
+fi

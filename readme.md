@@ -24,6 +24,8 @@ A file transfer benchmarking tool that measures read and write performance acros
 
 ```bash
 sudo ./tx-benchmark.sh -d <mount_directory> [options]
+# Or use the function name directly after sourcing:
+txbm -d <mount_directory> [options]
 
 Options:
   -d, --directory <dir>    Mount directory to test
@@ -40,19 +42,19 @@ NOTE: You need to run the script with sudo privileges.
 
 ```bash
 # Run both single and multiple file tests with default sizes
-./tx-benchmark.sh -d /mnt/test -s -m
+txbm -d /mnt/test -s -m
 
 # Test specific file sizes with verbose output
-./tx-benchmark.sh -d /mnt/test -f "10M,50M,200M" -s -v
+txbm -d /mnt/test -f "10M,50M,200M" -s -v
 
 # Test only multiple small files
-./tx-benchmark.sh -d /mnt/test -m
+txbm -d /mnt/test -m
 ```
 
 ### Example Output
 
 ``` bash
-sudo ./tools/tx-benchmark.sh -d /mnt/test  -s -m
+sudo txbm -d /mnt/test  -s -m
 ```
 
 | TestId | Type  | Size | Files | Speed     | Time  |
@@ -72,7 +74,7 @@ sudo ./tools/tx-benchmark.sh -d /mnt/test  -s -m
 
 
 ``` bash
-sudo ./tools/tx-benchmark.sh -d /mnt/test  -s -m -v
+sudo txbm -d /mnt/test  -s -m -v
 ```
 
 
@@ -117,7 +119,7 @@ When interpreting network file transfers:
 - High 'sys' time might indicate protocol overhead or CPU-intensive compression
 - Small files typically show higher 'sys' time due to more file operations
 
-## | github-pullrequest - GitHub PR Helper
+## | mkpr - GitHub PR Helper
 
 A utility script for quickly opening GitHub pull request creation pages directly from the command line or by sourcing into your shell environment.
 
@@ -125,7 +127,7 @@ A utility script for quickly opening GitHub pull request creation pages directly
 
 - Automatic GitHub repository detection from git remotes
 - Smart base branch detection (main, master, develop)
-- Support for both SSH and HTTPS remote formats  
+- Support for both SSH and HTTPS remote formats
 - URL encoding for branch names with special characters
 - Can be used as standalone script or sourced into .bashrc
 - Cross-platform browser opening (Linux/macOS)
@@ -134,11 +136,11 @@ A utility script for quickly opening GitHub pull request creation pages directly
 
 ```bash
 # As standalone script
-./github-pullrequest.sh [base_branch] [head_branch]
+./devex/github/mkpr.sh [base_branch] [head_branch]
 
-# Or source into .bashrc for global 'pr' command
-source /path/to/github-pullrequest.sh
-pr [base_branch] [head_branch]
+# Or source into .bashrc for global 'mkpr' command
+source /path/to/recodify-utils/devex/github/mkpr.sh
+mkpr [base_branch] [head_branch]
 
 Options:
   base_branch    Target branch for the PR (default: auto-detected from remote HEAD)
@@ -150,24 +152,62 @@ Options:
 
 ```bash
 # Create PR from current branch to default branch
-pr
+mkpr
 
 # Create PR from current branch to develop
-pr develop
+mkpr develop
 
 # Create PR from feature/foo to main
-pr main feature/foo
+mkpr main feature/foo
 
 # Show help
-pr --help
+mkpr --help
 ```
 
 ### Installation for Shell Integration
 
 Add to your .bashrc or .zshrc:
 ```bash
-source /path/to/recodify-utils/devex/github-pullrequest.sh
+source /path/to/recodify-utils/devex/github/mkpr.sh
 ```
+
+## | Claude Code Commands
+
+A collection of custom Claude Code commands that can be globally available across repositories.
+
+### Features
+
+- Reusable commands for common development workflows
+- Global availability through symlink setup
+- Consistent command behavior across projects
+
+### Available Commands
+
+- **commit** - Crafts commit messages and runs `git commit` with staged changes
+
+### Installation
+
+#### Automated Setup
+
+Run the setup script from within any repository to make commands available for that project:
+
+```bash
+/path/to/recodify-utils/devex/claude/setup.sh
+```
+
+#### Manual Setup
+
+Alternatively, create the symlink manually from within your target repository:
+
+```bash
+# Create .claude/commands directory if it doesn't exist
+mkdir -p .claude/commands
+
+# Symlink commands to global subfolder
+ln -s /path/to/recodify-utils/devex/claude/commands .claude/commands/global
+```
+
+Once installed in a repository, these commands will be available to Claude Code for that project.
 
 ## | mnt-forever - Mount Forever
 
@@ -187,6 +227,8 @@ A utility script for easily setting up and managing NFS and SMB mounts with auto
 
 ```bash
 sudo ./mount-setup.sh -t <type> -s <server> -r <remote_path> -m <mount_point> [-u <username>] [-p <password>]
+# Or use the function name directly after sourcing:
+mkmnt -t <type> -s <server> -r <remote_path> -m <mount_point> [-u <username>] [-p <password>]
 
 Options:
   -t, --type <type>        Mount type (nfs/smb)
@@ -204,13 +246,13 @@ NOTE: You need to run the script with sudo privileges.
 
 ```bash
 # Set up an NFS mount
-sudo ./mount-setup.sh -t nfs -s fileserver.local -r /exports/data -m /mnt/data
+mkmnt -t nfs -s fileserver.local -r /exports/data -m /mnt/data
 
 # Set up an SMB mount with authentication
-sudo ./mount-setup.sh -t smb -s fileserver.local -r /shared -m /mnt/shared -u myuser -p mypassword
+mkmnt -t smb -s fileserver.local -r /shared -m /mnt/shared -u myuser -p mypassword
 
 # Set up a guest SMB mount
-sudo ./mount-setup.sh -t smb -s fileserver.local -r /public -m /mnt/public
+mkmnt -t smb -s fileserver.local -r /public -m /mnt/public
 ```
 
 

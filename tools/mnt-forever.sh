@@ -1,7 +1,11 @@
 #!/bin/bash
 
-usage() {
-    echo "Usage: $0 -t <type> -s <server> -r <remote_path> -m <mount_point> [-u <username>] [-p <password>]"
+mkmnt_usage() {
+    echo "mkmnt - Mount Forever"
+    echo "Part of recodify-utils by recodify"
+    echo "https://github.com/recodify/recodify-utils"
+    echo ""
+    echo "Usage: mkmnt -t <type> -s <server> -r <remote_path> -m <mount_point> [-u <username>] [-p <password>]"
     echo "Options:"
     echo "  -t, --type <type>        Mount type (nfs/smb)"
     echo "  -s, --server <server>    Server address"
@@ -9,11 +13,16 @@ usage() {
     echo "  -m, --mount <path>       Local mount point"
     echo "  -u, --user <username>    Username (for SMB)"
     echo "  -p, --pass <password>    Password (for SMB)"
-    echo "  -h, --help              Show this help message"
-    exit 1
+    echo "  -h, --help               Show this help message"
+    return 1
 }
 
-setup_mount() {
+mkmnt() {
+    # Show usage if no arguments provided
+    if [ $# -eq 0 ]; then
+        mkmnt_usage
+        return 1
+    fi
     # Parse arguments
     MOUNT_TYPE=""
     SERVER=""
@@ -44,16 +53,22 @@ setup_mount() {
                 USERNAME="$2"
                 shift 2
                 ;;
+
+            -h|--help)
+                mkmnt_usage "help"
+                return 1
+                ;;
             -p|--pass)
                 PASSWORD="$2"
                 shift 2
                 ;;
             -h|--help)
-                usage
+                mkmnt_usage
                 ;;
             *)
                 echo "Unknown option: $1"
-                usage
+                mkmnt_usage
+                return 1
                 ;;
         esac
     done
@@ -61,19 +76,19 @@ setup_mount() {
     # Validate required arguments
     if [ -z "$MOUNT_TYPE" ] || [ -z "$SERVER" ] || [ -z "$MOUNT_POINT" ]; then
         echo "Error: Missing required arguments"
-        usage
+        mkmnt_usage
     fi
 
     # Check if running as root
     if [ "$EUID" -ne 0 ]; then
         echo "Please run as root (sudo)"
-        exit 1
+        return 1
     fi
 
     # Validate mount type
     if [ "$MOUNT_TYPE" != "nfs" ] && [ "$MOUNT_TYPE" != "smb" ]; then
         echo "Error: Mount type must be 'nfs' or 'smb'"
-        exit 1
+        return 1
     fi
 
     # Create mount point if it doesn't exist
@@ -142,5 +157,5 @@ setup_mount() {
 
 # Only run if script is executed directly (not sourced)
 if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then
-    setup_mount "$@"
+    mkmnt "$@"
 fi
