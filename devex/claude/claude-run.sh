@@ -214,6 +214,7 @@ claude-run() {
     [[ -n "$model" ]] && flags+=( --model "$model" )
 
     # Add mode-specific flags
+    echo "DEBUG: --permission-mode $mode"
     flags+=( --permission-mode $mode )
 
     # Some CLAUDE CLIs use --allowedTools, others don't. Pass only if set.
@@ -228,12 +229,56 @@ claude-run() {
     err "→ Prompt chars: ${#prompt}"
 
     echo "DEBUG: About to execute Claude" >&2
-    # Run Claude and capture exit code to prevent shell exit
-    "$CLAUDE_BIN" "${flags[@]}" "$prompt" || {
-        local claude_exit_code=$?
+
+    # Create a temporary file for capturing output
+    local temp_output=$(mktemp)
+    local temp_error=$(mktemp)
+
+    # Start Claude in background with output redirection
+    "$CLAUDE_BIN" "${flags[@]}" "$prompt" > "$temp_output" 2> "$temp_error" &
+    local claude_pid=$!
+
+    # Show progress while Claude runs
+    local spinner_chars="/-\|"
+    local spinner_pos=0
+    echo -n "Processing" >&2
+
+    while kill -0 "$claude_pid" 2>/dev/null; do
+        printf "\rProcessing %c" "${spinner_chars:$spinner_pos:1}" >&2
+        spinner_pos=$(( (spinner_pos + 1) % 4 ))
+        sleep 0.5
+
+        # Show any error output immediately
+        if [[ -s "$temp_error" ]]; then
+            echo >&2  # New line after spinner
+            cat "$temp_error" >&2
+            > "$temp_error"  # Clear the temp file
+        fi
+    done
+
+    # Wait for Claude to finish and get exit code
+    wait "$claude_pid"
+    local claude_exit_code=$?
+
+    echo >&2  # New line after spinner
+
+    # Show final output
+    if [[ -s "$temp_output" ]]; then
+        cat "$temp_output"
+    fi
+
+    # Show any remaining error output
+    if [[ -s "$temp_error" ]]; then
+        cat "$temp_error" >&2
+    fi
+
+    # Cleanup
+    rm -f "$temp_output" "$temp_error"
+
+    if [[ $claude_exit_code -ne 0 ]]; then
         echo "DEBUG: Claude exited with code $claude_exit_code" >&2
         return 0  # Always return success to prevent shell exit
-    }
+    fi
     echo "DEBUG: Claude completed successfully" >&2
 }
 
