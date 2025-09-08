@@ -10,6 +10,7 @@ example: |
     - Updated deploy workflow to assume Lambda execution role before running tests \
     - Tests now run with same DynamoDB permissions as production Lambda \
     - Ensures runtime permission validation and catches permission gaps \
+mode: acceptEdits
 ```
 ---
 
