@@ -11,10 +11,6 @@ SEL="$(xclip -o -selection primary 2>/dev/null || true)"
 if [ -z "${SEL:-}" ]; then
   SEL="$(xclip -o -selection clipboard 2>/dev/null || true)"
 fi
-if [ -z "${SEL:-}" ]; then
-  notify-send "ChatPaste" "No selection to send"
-  exit 0
-fi
 
 # --- Focus or open ChatGPT window ---
 if ! xdotool search --onlyvisible --name "ChatGPT" windowactivate; then
@@ -24,6 +20,12 @@ if ! xdotool search --onlyvisible --name "ChatGPT" windowactivate; then
   sleep 0.2
 fi
 
+# --- Behaviour if no selection ---
+if [ -z "${SEL:-}" ]; then
+  notify-send "ChatPaste" "Opened ChatGPT (no selection found)"
+  exit 0
+fi
+
 # --- Paste into input box ---
 printf %s "$SEL" | xclip -selection clipboard
 xdotool key --clearmodifiers ctrl+v
@@ -31,7 +33,7 @@ sleep 0.08
 
 # --- Submit ---
 if [ "$CLICK_SUBMIT" -eq 1 ]; then
-  # Click the Send button (brittle, only if explicitly requested)
+  # Click the Send button (only if explicitly enabled)
   WIN_ID="$(xdotool getactivewindow)"
   eval "$(xdotool getmouselocation --shell)"
   MOUSE_X_SAVE="$X"; MOUSE_Y_SAVE="$Y"
@@ -43,6 +45,6 @@ if [ "$CLICK_SUBMIT" -eq 1 ]; then
   xdotool mousemove --window "$WIN_ID" "$CX" "$CY" click 1
   xdotool mousemove "$MOUSE_X_SAVE" "$MOUSE_Y_SAVE" || true
 else
-  # Safer default: just press Enter
+  # Safer default: press Enter
   xdotool key --clearmodifiers Return
 fi
