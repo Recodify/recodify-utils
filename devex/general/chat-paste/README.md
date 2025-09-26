@@ -2,7 +2,7 @@
 
 ![main](../../../images/cargo.gif)
 
-A utility script that automatically pastes selected text or clipboard content to ChatGPT and submits it. Perfect for quickly sending code snippets, error messages, or text selections to ChatGPT without manual copy-paste.
+A utility script that automatically pastes selected text or clipboard content to ChatGPT. Perfect for quickly sending code snippets, error messages, or text selections to ChatGPT without manual copy-paste.
 
 ## Features
 
@@ -47,25 +47,14 @@ export CLICK_OFFSET_Y=70  # pixels from bottom edge
 
 ## Installation
 
-Install dependencies (Ubuntu/Debian):
 ```bash
-sudo apt install xclip xdotool libnotify-bin
+./install.sh
 ```
 
-## Usage Examples
+## Usage Example
 
-```bash
-# Basic usage - paste current selection to ChatGPT
-./chat-paste.sh
+Highlight some text and press right-windows key/right-⌘
 
-# Use click-to-submit mode
-CLICK_SUBMIT=1 ./chat-paste.sh
-
-# Create a keyboard shortcut
-# Add to your desktop environment's keyboard shortcuts:
-# Command: /path/to/chat-paste.sh
-# Shortcut: Ctrl+Shift+G (or your preference)
-```
 
 ## How It Works
 
