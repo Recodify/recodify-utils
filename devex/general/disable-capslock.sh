@@ -66,6 +66,7 @@ fi
 apply_now_x11() {
   # Clear any prior XKB options, then set desired caps behavior
   setxkbmap -option || true
+  echo "setxkbmap -option $CAPS_OPT"
   setxkbmap -option "$CAPS_OPT"
 }
 
@@ -85,48 +86,61 @@ fi
 
 # --- Persistence (optional and safe) ---
 if [[ "$PERSIST" == true ]]; then
-  # 1) Debian/Ubuntu persistence via /etc/default/keyboard
+  # 0) Keep GNOME in sync (affects both Wayland and X11 sessions under GNOME)
+  if have gsettings && gsettings list-schemas 2>/dev/null | grep -q '^org\.gnome\.desktop\.input-sources$'; then
+    echo "→ Persisting user setting via gsettings (GNOME)…"
+    gsettings set org.gnome.desktop.input-sources xkb-options "['$CAPS_OPT']" || true
+  fi
+
+  # 1) Debian/Ubuntu persistence via /etc/default/keyboard (change-detect)
   if [[ "$IS_DEBIAN" == true ]]; then
-    echo "→ Persisting via /etc/default/keyboard (Debian/Ubuntu)..."
-    need_sudo bash -c "cat >/etc/default/keyboard" <<EOF
+    echo "→ Persisting via /etc/default/keyboard (Debian/Ubuntu, change-detected only)…"
+    tmpfile="$(mktemp)"
+    cat >"$tmpfile" <<EOF
 XKBMODEL="$MODEL"
 XKBLAYOUT="$LAYOUT"
 XKBVARIANT=""
 XKBOPTIONS="$CAPS_OPT"
 BACKSPACE="guess"
 EOF
-    # Apply to console and trigger input refresh
-    if have dpkg-reconfigure; then
-      need_sudo dpkg-reconfigure -f noninteractive keyboard-configuration || true
-    fi
-    if have udevadm; then
-      need_sudo udevadm trigger --subsystem-match=input --action=change || true
-    fi
-    if have setupcon; then
-      need_sudo setupcon || true
+    if ! sudo cmp -s "$tmpfile" /etc/default/keyboard; then
+      echo "   Change detected → updating /etc/default/keyboard"
+      sudo mv "$tmpfile" /etc/default/keyboard
+      if have dpkg-reconfigure; then
+        sudo DEBIAN_FRONTEND=noninteractive dpkg-reconfigure keyboard-configuration || true
+      fi
+      if have udevadm; then
+        sudo udevadm trigger --subsystem-match=input --action=change || true
+      fi
+      if have setupcon; then
+        sudo setupcon || true
+      fi
+    else
+      echo "   No change → skipping reconfigure"
+      rm -f "$tmpfile"
     fi
   fi
 
-  # 2) Generic: if localectl exists, set X11 defaults (optional; present on many distros)
+  # 2) If localectl exists, set X11 defaults (no effect on current session)
   if have localectl; then
-    echo "→ Persisting X11 defaults via localectl..."
-    need_sudo localectl set-x11-keymap "$LAYOUT" "$MODEL" "" "$CAPS_OPT" || true
+    echo "→ Persisting X11 defaults via localectl…"
+    sudo localectl set-x11-keymap "$LAYOUT" "$MODEL" "" "$CAPS_OPT" || true
   fi
 else
   echo "→ Skipping persistence (--no-persist)."
 fi
 
-# --- Verification ---
-echo "→ Verify current settings:"
-if [[ "$SESSION_TYPE" == "x11" && $CAN_APPLY_X11 == true ]]; then
-  setxkbmap -query || true
-elif [[ "$SESSION_TYPE" == "wayland" && $CAN_APPLY_WAYLAND == true ]]; then
-  gsettings get org.gnome.desktop.input-sources xkb-options 2>/dev/null || true
+# --- Re-apply to current session AFTER persistence so nothing re-enables Caps ---
+if [[ "$CAN_APPLY_X11" == true ]]; then
+  echo "→ Re-applying to current X11 session…"
+  setxkbmap -option || true
+  setxkbmap -option "$CAPS_OPT"
+elif [[ "$CAN_APPLY_WAYLAND" == true ]]; then
+  echo "→ Re-applying to current Wayland (GNOME) session…"
+  gsettings set org.gnome.desktop.input-sources xkb-options "['$CAPS_OPT']" || true
+  have ibus && ibus restart || true
 fi
-if have localectl; then
-  echo
-  localectl status 2>/dev/null | sed -n '1,25p' || true
-fi
+
 
 echo "✅ Done. Caps behavior set to '$CAPS_OPT'."
 echo "   Layout: $LAYOUT  Model: $MODEL"
