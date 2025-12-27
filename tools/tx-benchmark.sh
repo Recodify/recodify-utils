@@ -139,14 +139,13 @@ if ! mkdir -p "$TEST_PATH" "$SMALL_FILES_PATH"; then
 fi
 
 if [ "$LOCAL_DRIVE" = "false" ]; then
-    if ! mountpoint -q "$TEST_DIR"; then
-        echo "Error: $TEST_DIR is not a valid mount point"
-        echo "Please check if your NAS is properly mounted"
+    if ! findmnt -T "$TEST_DIR" > /dev/null 2>&1; then
+        echo "Error: $TEST_DIR is not on a mounted filesystem"
+        echo "Please check if your NAS or external drive is properly mounted"
         echo "Use --local flag to skip this check for local/USB drives"
         return 1
     fi
 fi
-
 declare -a read_speeds
 declare -a write_speeds
 declare -a small_read_speeds
@@ -195,6 +194,7 @@ test_transfer() {
     local dst="$3"
     local is_dir="$4"
     local size="$5"
+    local mode="$6"   # "write" or "read"
 
     log_verbose "        Testing $description..." >&2
 
@@ -203,22 +203,34 @@ test_transfer() {
         return
     fi
 
+    # For reads, try to drop caches so we measure actual I/O, not RAM
+    if [ "$mode" = "read" ]; then
+        sync
+        echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
+    fi
+
+    # For writes, we also sync before to isolate this test from previous ones
+    if [ "$mode" = "write" ]; then
+        sync
+    fi
+
+    TIMEFORMAT='%R %U %S'
     if [ "$is_dir" = "true" ]; then
-        # Capture all three time values
-        TIMEFORMAT='%R %U %S'
-        timing=$( { time cp -r "$src" "$dst"; } 2>&1 )
+        timing=$( { time cp -r "$src" "$dst"; sync; } 2>&1 )
     else
-        TIMEFORMAT='%R %U %S'
-        timing=$( { time cp "$src" "$dst"; } 2>&1 )
+        timing=$( { time cp "$src" "$dst"; sync; } 2>&1 )
     fi
 
     # Parse the timing values
     read real user sys <<< "$timing"
 
-    local mb=$(size_in_mb "$size")
-    local speed=$(echo "scale=2; $mb / $real" | bc 2>/dev/null)
-    if [[ $speed =~ ^[0-9]*\.?[0-9]*$ ]] && [ $(echo "$speed < 10000" | bc) -eq 1 ]; then
-        # Return all values space-separated: speed user sys real
+    local mb
+    mb=$(size_in_mb "$size")
+
+    # Avoid divide by zero or garbage
+    if [ "$(echo "$real > 0" | bc 2>/dev/null)" -eq 1 ]; then
+        local speed
+        speed=$(echo "scale=2; $mb / $real" | bc 2>/dev/null)
         echo "$speed $user $sys $real"
     else
         echo "0 0 0 0"
@@ -252,7 +264,8 @@ single_file_tests(){
             "/tmp/${TEST_FILE_PREFIX}_${size}" \
             "${TEST_PATH}/" \
             false \
-            "$size")"
+            "$size" \
+            "write")"
         write_speeds+=("$speed")
     done
 
@@ -262,7 +275,8 @@ single_file_tests(){
             "${TEST_PATH}/${TEST_FILE_PREFIX}_${size}" \
             "/tmp/readtest_${size}" \
             false \
-            "$size")"
+            "$size" \
+            "read")"
         read_speeds+=("$speed")
 
         # Clean up source (temporary) files
@@ -292,17 +306,19 @@ multiple_small_files_tests(){
             "/tmp/small_${size}" \
             "${SMALL_FILES_PATH}/" \
             true \
-            "$size")"
+            "$size" \
+            "write")"
         small_write_speeds+=("$speed")
     done
 
     log_verbose "  Testing reads..."
     for size in "${FILE_SIZES[@]}"; do
-        speed="$(test_transfer "read speed with multiple files totaling ${size}" \
+       speed="$(test_transfer "read speed with multiple files totaling ${size}" \
             "${SMALL_FILES_PATH}/small_${size}" \
             "/tmp/readtest_small_${size}" \
             true \
-            "$size")"
+            "$size" \
+            "read")"
         small_read_speeds+=("$speed")
 
         # Clean up source (temporary) files

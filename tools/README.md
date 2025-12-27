@@ -19,7 +19,7 @@ sudo ./tx-benchmark.sh -d <mount_directory> [options]
 txbm -d <mount_directory> [options]
 
 Options:
-  -d, --directory <dir>    Mount directory to test
+  -t, --directory <dir>    Mount directory to test
   -f, --file-sizes <sizes> Comma-separated list of sizes (e.g., '100M,500M,1G')
   -s, --single            Run single file tests (default: false)
   -m, --multiple          Run multiple small files tests (default: false)
@@ -33,19 +33,19 @@ NOTE: You need to run the script with sudo privileges.
 
 ```bash
 # Run both single and multiple file tests with default sizes
-txbm -d /mnt/test -s -m
+txbm -t /mnt/test -s -m
 
 # Test specific file sizes with verbose output
-txbm -d /mnt/test -f "10M,50M,200M" -s -v
+txbm -t /mnt/test -f "10M,50M,200M" -s -v
 
 # Test only multiple small files
-txbm -d /mnt/test -m
+txbm -t /mnt/test -m
 ```
 
 ## Example Output
 
 ``` bash
-sudo txbm -d /mnt/test  -s -m
+sudo txbm -t /mnt/test  -s -m
 ```
 
 | TestId | Type  | Size | Files | Speed     | Time  |
