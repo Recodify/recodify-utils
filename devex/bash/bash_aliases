@@ -1,0 +1,356 @@
+#----------------------------LS----------------------------------------
+
+# long listing, all files (including dotfiles), classify types, human-readable
+alias ll='ls -alF'
+# show all files except . and .. (good for quick scans)
+alias la='ls -A'
+# long listing, sorted by modified time, newest first, human-readable
+alias lt='ls -lth'
+# long listing, sorted by modified time, oldest first, human-readable
+alias ltr='ls -ltrh'
+
+#------------------------------GIT---------------------------------------
+alias rmorig="find . -name '*.orig' -delete"
+# untrack ignored files without deleting them
+alias git-untrack='git rm -r --cached . && git add .'
+
+# short status
+alias gs='git status -sb'
+
+# last commit, readable
+alias gl='git log -1 --oneline --decorate'
+
+# compact log graph
+alias glg='git log --oneline --decorate --graph --all'
+
+
+#---------------------------SYMLINKS-----------------------------------
+# create symlink with clear syntax: symlink <target> <link_name>
+# Example: symlink /usr/bin/python3 /usr/local/bin/python
+symlink() {
+  if [ $# -ne 2 ]; then
+    echo "Usage: symlink <target> <link_name>"
+    echo "Creates: link_name -> target"
+    echo ""
+    echo "Examples:"
+    echo "  symlink /usr/bin/python3 ~/bin/python"
+    echo "  symlink /opt/app/config.json ./config.json"
+    return 1
+  fi
+  ln -s "$1" "$2"
+  echo "Created: $2 -> $1"
+  ls -l "$2"
+}
+
+# create symlink to file/dir in current directory
+# Example: lnhere /etc/nginx/sites-available/mysite
+lnhere() {
+  if [ -z "$1" ]; then
+    echo "Usage: lnhere <target>"
+    echo "Creates symlink in current directory with same name as target"
+    echo ""
+    echo "Example: lnhere /etc/nginx/sites-available/mysite"
+    echo "Creates: ./mysite -> /etc/nginx/sites-available/mysite"
+    return 1
+  fi
+  local target="$1"
+  local name=$(basename "$target")
+  ln -s "$target" "$name"
+  echo "Created: $name -> $target"
+  ls -l "$name"
+}
+
+# show where a symlink points (resolves full path)
+# Example: wherelinks /usr/bin/python
+alias wherelinks='readlink -f'
+
+# show where symlink points (one level, doesn't resolve further)
+alias wherelink='readlink'
+
+# list all symlinks in current directory
+alias lslinks='find . -maxdepth 1 -type l -ls'
+
+# list all symlinks recursively
+alias lslinksall='find . -type l -ls'
+
+# find broken symlinks in current directory
+alias findbroken='find . -maxdepth 1 -xtype l'
+
+# find all broken symlinks recursively
+alias findbrokenall='find . -xtype l'
+
+# remove broken symlinks in current directory
+rmbroken() {
+  local broken=$(find . -maxdepth 1 -xtype l)
+  if [ -z "$broken" ]; then
+    echo "No broken symlinks found"
+    return 0
+  fi
+  echo "Found broken symlinks:"
+  echo "$broken"
+  echo ""
+  read -p "Remove these broken symlinks? (y/N) " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    find . -maxdepth 1 -xtype l -delete
+    echo "Removed broken symlinks"
+  else
+    echo "Cancelled"
+  fi
+}
+
+# show symlink details (target, type, size)
+lninfo() {
+  if [ -z "$1" ]; then
+    echo "Usage: lninfo <symlink>"
+    return 1
+  fi
+  if [ ! -L "$1" ]; then
+    echo "Error: $1 is not a symlink"
+    return 1
+  fi
+  echo "Symlink: $1"
+  echo "Points to: $(readlink "$1")"
+  echo "Resolves to: $(readlink -f "$1")"
+  echo ""
+  ls -lh "$1"
+  echo ""
+  if [ -e "$1" ]; then
+    echo "Target exists: ✓"
+    file "$(readlink -f "$1")"
+  else
+    echo "Target exists: ✗ (broken symlink)"
+  fi
+}
+
+
+#---------------------------FILE SYSTEM--------------------------------
+# ncdu, stay on same filesystem
+alias ncdu1='ncdu -x .'
+
+# human-readable du, one level deep
+alias duh='du -h --max-depth=1'
+
+# count lines in files: lcount *.ts *.js
+alias lcount='wc -l'
+
+# count ALL files recursively in current dir - use as: fcount
+fcount() {
+  find . -type f | wc -l
+}
+
+# count files by extension recursively - use as: fcountx json
+fcountx() {
+  if [ -z "$1" ]; then
+    echo "Usage: fcountx <pattern>"
+    echo "Example: fcountx *.json"
+    return 1
+  fi
+  find . -type f -name "${1}" | wc -l
+}
+
+#----------------------------DOCKER------------------------------------
+# list all running containers with better formatting
+alias dockerps='docker ps --format "{{.Names}}\t\t{{.Status}}"'
+# stop all running containers
+alias dockerstopall='docker stop $(docker ps -a -q)'
+
+
+#----------------------------TEXT--------------------------------------
+# strip ANSI escape codes (color codes etc) from text
+alias stripansi='sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"'
+# recursive grep, line numbers, ignore binary junk
+alias gr='grep -RIn --binary-files=without-match'
+
+# grep but ignore the usual garbage (ignores common build/dependency dirs)
+alias grc='grep -RIn --binary-files=without-match --exclude-dir={.git,node_modules,dist,build,target,.venv}'
+
+#------------------------------AWS-------------------------------------
+alias aws2='/home/sam/aws-cli2/v2/current/bin/aws'
+
+
+#----------------------------PYTHON------------------------------------
+alias python='python3'
+alias python2='/bin/python'
+
+
+#----------------------------TERRAFORM---------------------------------
+alias tf=terraform
+
+
+#----------------------------MOUNTS & DISKS----------------------------
+# show all mounts in a tree view
+alias mounts='findmnt'
+
+# show mounts with filesystem type and size, human-readable
+alias mountsdf='df -hT'
+
+# show only local physical mounts (no tmpfs, devtmpfs, etc)
+alias mountsreal='findmnt -t ext4,ext3,xfs,btrfs,ntfs'
+
+# check what's mounted at a specific point
+alias mountat='findmnt --target'
+
+# list all block devices with filesystem info
+alias lsb='lsblk -f'
+
+# list block devices with size, type, mountpoints
+alias lsblkall='lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT,UUID'
+
+# disk usage by filesystem
+alias dfh='df -hT --exclude-type=tmpfs --exclude-type=devtmpfs'
+
+
+#----------------------------SYSTEMCTL---------------------------------
+# list all running services
+alias sysrunning='systemctl list-units --type=service --state=running'
+
+# list all failed services
+alias sysfailed='systemctl list-units --type=service --state=failed'
+
+# list enabled services
+alias sysenabled='systemctl list-unit-files --type=service --state=enabled'
+
+# show full service status (no pager truncation)
+alias sysstat='systemctl status --no-pager -l'
+
+# restart a service and show its status
+alias sysrestart='systemctl restart'
+
+# reload systemd daemon (after editing unit files)
+alias sysdaemon='systemctl daemon-reload'
+
+# list all timers
+alias systimers='systemctl list-timers --all'
+
+
+#----------------------------DMESG & KERNEL----------------------------
+# human-readable kernel messages with timestamps
+alias dmesgh='dmesg -H'
+
+# follow kernel messages in real-time
+alias dmesgf='dmesg -w'
+
+# show only errors and warnings
+alias dmsgerr='dmesg -l err,warn'
+
+# search dmesg for a pattern (use: dmsgg usb)
+alias dmsgg='dmesg | grep -i'
+
+# last 50 kernel messages, human-readable
+alias dmesg50='dmesg -H | tail -50'
+
+
+#----------------------------JOURNALCTL--------------------------------
+# follow system journal in real-time
+alias jf='journalctl -f'
+
+# show journal for current boot only
+alias jboot='journalctl -b'
+
+# show journal for previous boot
+alias jboot-1='journalctl -b -1'
+
+# journal errors from current boot
+alias jerr='journalctl -b -p err'
+
+# journal for specific service (use: jsvc nginx)
+alias jsvc='journalctl -u'
+
+# follow specific service logs (use: jfollowsvc nginx)
+alias jfollowsvc='journalctl -fu'
+
+# show journal with full output (no truncation)
+alias jfull='journalctl --no-pager -l'
+
+# last 100 journal entries, human-readable
+alias j100='journalctl -n 100 --no-pager'
+
+# journal since 1 hour ago
+alias j1h='journalctl --since "1 hour ago"'
+
+# journal from today
+alias jtoday='journalctl --since today'
+
+# journal from yesterday
+alias jyesterday='journalctl --since yesterday --until today'
+
+# kernel messages from journal (alternative to dmesg)
+alias jkernel='journalctl -k'
+
+# vacuum old journal logs (keep last 7 days)
+alias jvacuum='journalctl --vacuum-time=7d'
+
+
+#----------------------------PROCESSES---------------------------------
+# find process by name
+alias psg='ps aux | grep -v grep | grep -i -e VSZ -e'
+
+# top processes by memory usage
+alias topmem='ps aux --sort=-%mem | head -n 11'
+
+# top processes by CPU usage
+alias topcpu='ps aux --sort=-%cpu | head -n 11'
+
+
+#----------------------------NETWORK-----------------------------------
+# show listening ports with process names
+alias ports='netstat -tulpn'
+
+# alternative: listening ports with ss (faster)
+alias portss='ss -tulpn'
+
+# show all connections
+alias conns='ss -tupan'
+
+# list all open files with numeric UIDs
+alias lsofl='lsof -l'
+
+# list open files by specific user (use: lsofuser sam)
+alias lsofuser='lsof -u'
+
+# kill process listening on specific port (use: killport 8080)
+killport() {
+  if [ -z "$1" ]; then
+    echo "Usage: killport <port_number>"
+    return 1
+  fi
+  lsof -t -i ":$1" | xargs -r kill
+}
+
+# forcefully kill process on port (use: killport9 8080)
+killport9() {
+  if [ -z "$1" ]; then
+    echo "Usage: killport9 <port_number>"
+    return 1
+  fi
+  lsof -t -i ":$1" | xargs -r kill -9
+}
+
+# show what's using a specific port (use: whatport 8080)
+alias whatport='lsof -i :'
+
+
+#----------------------------SYSTEM INFO-------------------------------
+# show OS/distribution version info
+alias osinfo='lsb_release -a'
+
+# show kernel version
+alias kernelver='uname -r'
+
+
+#----------------------------QUICK UTILS-------------------------------
+# reload bash aliases without logging out
+alias reload='source ~/.bashrc'
+
+# show command history with timestamps
+alias histt='history | tail -20'
+
+# clear screen and show only current directory
+alias cls='clear && pwd && ls'
+
+# human-readable memory info
+alias meminfo='free -h'
+
+# watch command with 1 second interval
+alias watch1='watch -n 1'
