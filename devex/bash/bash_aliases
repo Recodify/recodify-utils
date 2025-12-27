@@ -17,6 +17,9 @@ alias git-untrack='git rm -r --cached . && git add .'
 # short status
 alias gs='git status -sb'
 
+# diff status
+alias gsv='git status -vv'
+
 # last commit, readable
 alias gl='git log -1 --oneline --decorate'
 
@@ -27,7 +30,7 @@ alias glg='git log --oneline --decorate --graph --all'
 #---------------------------SYMLINKS-----------------------------------
 # create symlink with clear syntax: symlink <target> <link_name>
 # Example: symlink /usr/bin/python3 /usr/local/bin/python
-symlink() {
+lnthere() {
   if [ $# -ne 2 ]; then
     echo "Usage: symlink <target> <link_name>"
     echo "Creates: link_name -> target"
@@ -62,25 +65,27 @@ lnhere() {
 
 # show where a symlink points (resolves full path)
 # Example: wherelinks /usr/bin/python
-alias wherelinks='readlink -f'
+alias lnwherea='readlink -f'
 
 # show where symlink points (one level, doesn't resolve further)
-alias wherelink='readlink'
+alias lnwhere='readlink'
 
 # list all symlinks in current directory
-alias lslinks='find . -maxdepth 1 -type l -ls'
+alias lnls='find . -maxdepth 1 -type l -ls'
 
 # list all symlinks recursively
 alias lslinksall='find . -type l -ls'
 
 # find broken symlinks in current directory
-alias findbroken='find . -maxdepth 1 -xtype l'
+alias lnfindbroken='find . -maxdepth 1 -xtype l'
 
 # find all broken symlinks recursively
-alias findbrokenall='find . -xtype l'
+alias lnfindbrokenall='find . -xtype l'
+
+alias lnrm='unlink'
 
 # remove broken symlinks in current directory
-rmbroken() {
+lnrmbroken() {
   local broken=$(find . -maxdepth 1 -xtype l)
   if [ -z "$broken" ]; then
     echo "No broken symlinks found"
