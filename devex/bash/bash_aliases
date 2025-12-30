@@ -178,11 +178,11 @@ alias aws2='/home/sam/aws-cli2/v2/current/bin/aws'
 alias python='python3'
 alias python2='/bin/python'
 alias pymkenv='python -m venv ./venv'
-alias pyenv='. ./venv/bin/activate
+alias pyenv='. ./venv/bin/activate'
+
 
 #----------------------------TERRAFORM---------------------------------
 alias tf=terraform
-
 
 #----------------------------MOUNTS & DISKS----------------------------
 # show all mounts in a tree view
