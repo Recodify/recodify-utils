@@ -360,3 +360,37 @@ alias meminfo='free -h'
 
 # watch command with 1 second interval
 alias watch1='watch -n 1'
+
+#----------------------------TAR & ARCHIVES----------------------------
+# create tar.gz archive: targz archive-name.tar.gz folder/
+alias targz='tar -czf'
+
+# extract tar.gz: untargz archive.tar.gz
+alias untargz='tar -xzf'
+
+# create tar (no compression): tarcreate archive.tar folder/
+alias tarcreate='tar -cf'
+
+# extract tar: tarextract archive.tar
+alias tarextract='tar -xf'
+
+# list contents of tar: tarlist archive.tar.gz
+alias tarlist='tar -tzf'
+
+# extract tar.gz to specific directory: tarextractto archive.tar.gz /path/to/dir
+alias tarextractto='tar -xzf'
+
+# create tar.bz2 (better compression): tarbz archive.tar.bz2 folder/
+alias tarbz='tar -cjf'
+
+# extract tar.bz2: untarbz archive.tar.bz2
+alias untarbz='tar -xjf'
+
+# smart extract (auto-detects format): tarx archive.tar.*
+alias tarx='tar -xf'
+
+# create tar.gz with verbose output
+alias targzv='tar -czvf'
+
+# extract tar.gz with verbose output
+alias untargzv='tar -xzvf'
