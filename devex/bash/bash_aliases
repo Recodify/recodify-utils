@@ -1,7 +1,7 @@
 #----------------------------LS----------------------------------------
 
 # long listing, all files (including dotfiles), classify types, human-readable
-alias ll='ls -alF'
+alias ll='ls -alFh'
 # show all files except . and .. (good for quick scans)
 alias la='ls -A'
 # long listing, sorted by modified time, newest first, human-readable
