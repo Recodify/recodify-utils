@@ -1,0 +1,55 @@
+{
+  "alwaysThinkingEnabled": true,
+  "permissions": {
+    "allow": [
+
+      "_COMMENT: BASH",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(sleep:*)",
+      "Bash(pkill:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(jq:*)",
+      "Bash(curl:*)",
+
+      "_COMMENT: CLICKHOUSE",
+      "Bash(clickhouse-client:*)",
+
+      "_COMMENT: NPM",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+
+      "_COMMENT: DOCKER",
+      "Bash(docker build:*)",
+      "Bash(docker run:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker images:*)",
+      "Bash(docker logs:*)",
+
+      "_COMMENT: GIT",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+
+      "_COMMENT: PYTHON",
+      "Bash(python:*)",
+      "Bash(pip:*)",
+      "Bash(python3:*)",
+      "Bash(pip3:*)",
+
+      "_COMMENT: DOTNET",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet build:*)"
+    ]
+  }
+}
