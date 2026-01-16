@@ -14,6 +14,7 @@
       "Bash(ls:*)",
       "Bash(jq:*)",
       "Bash(curl:*)",
+      "Bash(mkdir:*)",
 
       "_COMMENT: CLICKHOUSE",
       "Bash(clickhouse-client:*)",

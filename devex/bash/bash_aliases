@@ -139,19 +139,47 @@ alias duh='du -h --max-depth=1'
 # count lines in files: lcount *.ts *.js
 alias lcount='wc -l'
 
-# count ALL files recursively in current dir - use as: fcount
+# Count files recursively, with optional path + max depth.
+# Usage:
+#   fcount                # current dir, depth 0 (only ./)
+#   fcount . 2            # current dir, depth 2
+#   fcount /var/log 1     # /var/log, depth 1
 fcount() {
-  find . -type f | wc -l
-}
+  local path="${1:-.}"
+  local depth="${2:-1}"
 
-# count files by extension recursively - use as: fcountx json
-fcountx() {
-  if [ -z "$1" ]; then
-    echo "Usage: fcountx <pattern>"
-    echo "Example: fcountx *.json"
+  if ! [[ "$depth" =~ ^[0-9]+$ ]]; then
+    echo "Usage: fcount [path] [max_depth]"
+    echo "max_depth must be a non-negative integer"
     return 1
   fi
-  find . -type f -name "${1}" | wc -l
+
+  find "$path" -maxdepth "$depth" -type f 2>/dev/null | wc -l
+}
+
+# Count files by extension or pattern, with optional path + max depth.
+# Usage:
+#   fcountx '*.json'              # current dir, depth 0
+#   fcountx '*.json' . 3          # current dir, depth 3
+#   fcountx '*.json' /tmp 2       # /tmp, depth 2
+fcountx() {
+  local pattern="$1"
+  local path="${2:-.}"
+  local depth="${3:-1}"
+
+  if [ -z "$pattern" ]; then
+    echo "Usage: fcountx <pattern> [path] [max_depth]"
+    echo "Example: fcountx '*.json' . 3"
+    return 1
+  fi
+
+  if ! [[ "$depth" =~ ^[0-9]+$ ]]; then
+    echo "Usage: fcountx <pattern> [path] [max_depth]"
+    echo "max_depth must be a non-negative integer"
+    return 1
+  fi
+
+  find "$path" -maxdepth "$depth" -type f -name "$pattern" 2>/dev/null | wc -l
 }
 
 #----------------------------DOCKER------------------------------------
