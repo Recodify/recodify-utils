@@ -9,6 +9,89 @@ alias lt='ls -lth'
 # long listing, sorted by modified time, oldest first, human-readable
 alias ltr='ls -ltrh'
 
+# lsf - list first file/directory matching pattern
+# Usage: lsf [pattern]
+# Examples:
+#   lsf           # first item in current dir
+#   lsf *.log     # first .log file
+#   lsf -t        # first item sorted by modification time
+lsf() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Usage: lsf [ls options] [pattern]"
+        echo "Show the first file/directory from ls output"
+        echo ""
+        echo "Examples:"
+        echo "  lsf              # first item in current dir"
+        echo "  lsf *.log        # first .log file"
+        echo "  lsf -t           # first item sorted by modification time"
+        return 0
+    fi
+    ls "$@" | head -n 1
+}
+
+#----------------------------Cat----------------------------------------
+
+
+# catf - cat the first file matching pattern
+# Usage: catf [pattern]
+# Examples:
+#   catf *.txt    # cat the first .txt file
+#   catf *.json   # cat the first .json file
+catf() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Usage: catf [ls options] [pattern]"
+        echo "Cat the first file from ls output"
+        echo ""
+        echo "Examples:"
+        echo "  catf *.txt       # cat the first .txt file"
+        echo "  catf *.json      # cat the first .json file"
+        return 0
+    fi
+    
+    local file
+    file=$(ls "$@" | head -n 1)
+    
+    if [[ -z "$file" ]]; then
+        echo "Error: no files found" >&2
+        return 1
+    elif [[ ! -f "$file" ]]; then
+        echo "Error: '$file' is not a regular file" >&2
+        return 1
+    fi
+    
+    cat "$file"
+}
+
+# catl - cat the latest (most recently modified) file matching pattern
+# Usage: catl [pattern]
+# Examples:
+#   catl *.log    # cat the most recent .log file
+#   catl          # cat the most recent file in current dir
+catl() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Usage: catl [pattern]"
+        echo "Cat the most recently modified file"
+        echo ""
+        echo "Examples:"
+        echo "  catl *.log       # cat the most recent .log file"
+        echo "  catl             # cat the most recent file in current dir"
+        return 0
+    fi
+    
+    local file
+    file=$(ls -t "$@" | head -n 1)
+    
+    if [[ -z "$file" ]]; then
+        echo "Error: no files found" >&2
+        return 1
+    elif [[ ! -f "$file" ]]; then
+        echo "Error: '$file' is not a regular file" >&2
+        return 1
+    fi
+    
+    cat "$file"
+}
+
 #------------------------------GIT---------------------------------------
 alias rmorig="find . -name '*.orig' -delete"
 # untrack ignored files without deleting them
@@ -25,6 +108,10 @@ alias gl='git log -1 --oneline --decorate'
 
 # compact log graph
 alias glg='git log --oneline --decorate --graph --all'
+
+# list untracked and unignore files in size desc order
+alias gitxl='git ls-files -o --exclude-standard | xargs du -h | sort -h'
+
 
 
 #---------------------------SYMLINKS-----------------------------------
@@ -137,7 +224,40 @@ alias ncdu1='ncdu -x .'
 alias duh='du -h --max-depth=1'
 
 # count lines in files: lcount *.ts *.js
-alias lcount='wc -l'
+#alias lcount='wc -l'
+
+lcount() {
+  local src="$1"
+  local pattern="$2"
+  local maxDepth="${3:-1}"
+
+  find "$src" -maxdepth "$maxDepth" -type f -iname "$pattern" -print0 \
+  | xargs -0 wc -l \
+  | awk 'NF==2 {s+=$1} END{printf "%.0f\n", s}'
+}
+
+
+mvx() {
+  local src="$1"
+  local dest="$2"
+  local pattern="$3"
+  local maxDepth="${4:-1}"
+  local type="${5:-f}"
+
+  find "$src" -maxdepth "$maxDepth" -type "$type" -iname "$pattern" -exec mv -t "$dest" -- {} +
+}
+
+
+cpx() {
+  local src="$1"
+  local dest="$2"
+  local pattern="$3"
+  local maxDepth="${4:-1}"
+  local type="${5:-f}"
+
+  find "$src" -maxdepth "$maxDepth" -type "$type" -iname "$pattern" -exec cp -t "$dest" -- {} +
+}
+
 
 # Count files recursively, with optional path + max depth.
 # Usage:
@@ -182,13 +302,20 @@ fcountx() {
   find "$path" -maxdepth "$depth" -type f -name "$pattern" 2>/dev/null | wc -l
 }
 
+stat-count() {
+  c=$(fcount $1)
+  echo "$1 $c"
+}
+
 #----------------------------DOCKER------------------------------------
 # list all running containers with better formatting
 alias dockerps='docker ps --format "{{.Names}}\t\t{{.Status}}"'
 # stop all running containers
 alias dockerstopall='docker stop $(docker ps -a -q)'
 
-
+d-restart() {
+  d-down && d-up
+}
 #----------------------------TEXT--------------------------------------
 # strip ANSI escape codes (color codes etc) from text
 alias stripansi='sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"'
@@ -326,6 +453,33 @@ alias topmem='ps aux --sort=-%mem | head -n 11'
 # top processes by CPU usage
 alias topcpu='ps aux --sort=-%cpu | head -n 11'
 
+ls-pid() {
+  # pgrep gives you exactly what you want without grep noise
+  pgrep -af $1 || true
+}
+
+run_n_times() {
+  local n="$1"
+  shift
+
+  for ((i=1; i<=n; i++)); do
+    "$@"
+  done
+}
+
+
+run_n_times_bg() {
+  local n="$1"
+  shift
+
+  pids=()
+
+  for ((i=1; i<=n; i++)); do
+    "$@" > /dev/null 2>&1 &
+    #"$@" &
+    pids+=($!)
+  done
+}
 
 #----------------------------NETWORK-----------------------------------
 # show listening ports with process names
