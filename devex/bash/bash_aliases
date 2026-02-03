@@ -225,6 +225,7 @@ alias duh='du -h --max-depth=1'
 
 # count lines in files: lcount *.ts *.js
 #alias lcount='wc -l'
+alias ss='gnome-screenshot -a -c'
 
 lcount() {
   local src="$1"
@@ -234,6 +235,92 @@ lcount() {
   find "$src" -maxdepth "$maxDepth" -type f -iname "$pattern" -print0 \
   | xargs -0 wc -l \
   | awk 'NF==2 {s+=$1} END{printf "%.0f\n", s}'
+}
+
+csv_wc_count_int() {
+  local dir="${1:-.}"
+  [[ -d "$dir" ]] || { echo "csv_wc_count_int: not a directory: $dir" >&2; return 1; }
+
+  local file_count total_lines rows
+  file_count=$(find "$dir" -maxdepth 1 -type f -name '*.csv' -print | wc -l)
+  [[ "$file_count" -eq 0 ]] && { printf '0\n'; return 0; }
+
+  total_lines=$(
+    find "$dir" -maxdepth 1 -type f -name '*.csv' -print0 \
+      | xargs -0 wc -l \
+      | awk 'END{print $1}'
+  )
+
+  rows=$(( total_lines - file_count ))
+  (( rows < 0 )) && rows=0
+  printf '%d\n' "$rows"
+}
+
+# Count total CSV data rows in a directory (assumes 1 header row per file)
+csv_wc_count() {
+  local dir="${1:-.}"
+
+  if [[ ! -d "$dir" ]]; then
+    echo "csv_wc_count: not a directory: $dir" >&2
+    return 1
+  fi
+
+  local oldpwd total_lines file_count
+  oldpwd="$(pwd)"
+
+  cd "$dir" || return 1
+
+  file_count=$(find . -maxdepth 1 -type f -name '*.csv' -print | wc -l)
+
+  if [[ "$file_count" -eq 0 ]]; then
+    echo "Dir: $dir"
+    echo "Total data rows: 0"
+    echo "Total files: 0"
+    cd "$oldpwd" || true
+    return 0
+  fi
+
+  total_lines=$(
+    find . -maxdepth 1 -type f -name '*.csv' -print0 \
+      | xargs -0 wc -l \
+      | awk 'END{print $1}'
+  )
+
+  echo "Dir: $dir"
+  echo "Total data rows: $((total_lines - file_count))"
+  echo "Total files: $file_count"
+
+  cd "$oldpwd" || true
+}
+
+# Count total rows across Parquet files in a directory using DuckDB
+parquet_duck_count() {
+  local dir="${1:-.}"
+
+  if [[ ! -d "$dir" ]]; then
+    echo "parquet_duck_count: not a directory: $dir" >&2
+    return 1
+  fi
+
+  # Count files first, and bail out before touching duckdb if none exist
+  local file_count
+  file_count=$(find "$dir" -maxdepth 1 -type f -name '*.parquet' -print | wc -l)
+
+  if [[ "$file_count" -eq 0 ]]; then
+    echo "Dir: $dir"
+    echo "Total rows: 0"
+    echo "Total files: 0"
+    return 0
+  fi
+
+  if ! command -v duckdb >/dev/null 2>&1; then
+    echo "parquet_duck_count: duckdb not found on PATH" >&2
+    return 1
+  fi
+
+  echo "Dir: $dir"
+  duckdb -c "SELECT COUNT(*) AS rows FROM read_parquet('${dir%/}/*.parquet');"
+  echo "Total files: $file_count"
 }
 
 
