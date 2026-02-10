@@ -1,0 +1,114 @@
+flowchart TB
+
+%% ─────────────────────────────────────────────
+%% Redux Dark "Color Zoo" — nodes + containers + connectors
+%% Paste into Mermaid and tweak classDefs as you like.
+%% ─────────────────────────────────────────────
+
+%% Nodes
+SVC["svc"]
+SVC2["svcAlt"]
+DATA["data"]
+DATA2["dataSoft"]
+INFRA["infra"]
+STORE["storage"]
+DEC["decision"]
+WARN["warning"]
+DANG["danger"]
+EXT["external"]
+LEG["legacy"]
+NOTE["note"]
+
+%% Layout
+SVC --> SVC2 --> DATA --> DATA2 --> INFRA --> STORE --> DEC --> WARN --> DANG --> EXT --> LEG --> NOTE
+
+%% Apply classes
+class SVC svc;
+class SVC2 svcAlt;
+class DATA data;
+class DATA2 dataSoft;
+class INFRA infra;
+class STORE storage;
+class DEC decision;
+class WARN warning;
+class DANG danger;
+class EXT external;
+class LEG legacy;
+class NOTE note;
+
+%% Subgraph containers
+subgraph SG1["sgPrimary"]
+  direction TB
+  A1["node"]:::svc
+  A2["node"]:::data
+end
+
+subgraph SG2["sgAlt"]
+  direction TB
+  B1["node"]:::infra
+  B2["node"]:::storage
+end
+
+subgraph SG3["sgFocus"]
+  direction TB
+  C1["node"]:::svcAlt
+  C2["node"]:::note
+end
+
+subgraph SG4["sgWarn"]
+  direction TB
+  D1["node"]:::warning
+  D2["node"]:::danger
+end
+
+subgraph SG5["sgDashed"]
+  direction TB
+  E1["node"]:::external
+  E2["node"]:::legacy
+end
+
+SG1 --- SG2 --- SG3 --- SG4 --- SG5
+
+%% Apply container classes (works in many renderers; fallback is `style SGx ...`)
+class SG1 sgPrimary;
+class SG2 sgAlt;
+class SG3 sgFocus;
+class SG4 sgWarn;
+class SG5 sgDashed;
+
+%% Connector defaults
+linkStyle default stroke:#94a3b8,stroke-width:1.2
+
+%% Example highlighted connector (between DATA and DATA2)
+%% Edge index depends on order; uncomment and adjust if you want:
+%% linkStyle 2 stroke:#38bdf8,stroke-width:3
+
+%% ─────────────────────────────────────────────
+%% Redux Dark palette classDefs
+%% ─────────────────────────────────────────────
+
+%% Nodes
+classDef svc        fill:#0b3a5b,stroke:#38bdf8,stroke-width:1.5,color:#e5f6ff;
+classDef svcAlt     fill:#1e293b,stroke:#60a5fa,color:#e5e7eb;
+
+classDef data       fill:#052e2b,stroke:#2dd4bf,stroke-width:1.5,color:#ecfeff;
+classDef dataSoft   fill:#022c22,stroke:#34d399,color:#ecfdf5;
+
+classDef infra      fill:#1f2933,stroke:#22c55e,stroke-width:1.5,color:#dcfce7;
+classDef storage    fill:#052e16,stroke:#4ade80,color:#ecfdf5;
+
+classDef decision   fill:#4c0519,stroke:#fb7185,stroke-width:2,color:#fff1f2;
+classDef warning    fill:#422006,stroke:#f59e0b,stroke-width:2,color:#fffbeb;
+classDef danger     fill:#450a0a,stroke:#ef4444,stroke-width:2,color:#fee2e2;
+
+classDef external   fill:#020617,stroke:#94a3b8,stroke-dasharray:5 5,color:#cbd5e1;
+classDef legacy     fill:#020617,stroke:#64748b,stroke-dasharray:2 4,color:#94a3b8;
+
+classDef note       fill:#1e1b4b,stroke:#818cf8,color:#e0e7ff,font-style:italic;
+
+%% Containers / subgraphs
+classDef sgPrimary fill:#0b1220,stroke:#475569,stroke-width:2,rx:12,ry:12;
+classDef sgAlt     fill:#020617,stroke:#334155,stroke-width:1.5,rx:10,ry:10;
+classDef sgFocus   fill:#020617,stroke:#60a5fa,stroke-width:2,rx:12,ry:12;
+classDef sgWarn    fill:#1f0a0a,stroke:#fb7185,stroke-width:2,rx:12,ry:12;
+classDef sgDashed  fill:#020617,stroke:#64748b,stroke-dasharray:6 6,rx:12,ry:12;

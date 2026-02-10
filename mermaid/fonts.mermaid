@@ -1,0 +1,101 @@
+flowchart TB
+
+%% ─────────────────────────────────────────────
+%% Nodes to demonstrate font-related classDefs
+%% ─────────────────────────────────────────────
+F0["default font"]
+F1[".fontSans"]
+F2[".fontSerif"]
+F3[".fontMono"]
+F4[".fontBig"]
+F5[".fontSmall"]
+F6[".fontBold"]
+F7[".fontItalic"]
+F8[".fontCaps"]
+F9[".fontUnderline"]
+F10[".fontTight"]
+F11[".fontLoose"]
+
+F0 --> F1 --> F2 --> F3 --> F4 --> F5 --> F6 --> F7 --> F8 --> F9 --> F10 --> F11
+
+class F1 fontSans;
+class F2 fontSerif;
+class F3 fontMono;
+class F4 fontBig;
+class F5 fontSmall;
+class F6 fontBold;
+class F7 fontItalic;
+class F8 fontCaps;
+class F9 fontUnderline;
+class F10 fontTight;
+class F11 fontLoose;
+
+%% ─────────────────────────────────────────────
+%% Subgraphs to demonstrate font styling on containers
+%% Note: classing subgraphs works in many renderers, but not all.
+%% If yours ignores it, use `style SG...` as a fallback.
+%% ─────────────────────────────────────────────
+subgraph SG0["Default subgraph title"]
+  direction TB
+  SG0A["node"]
+end
+
+subgraph SG1[".sgSans title"]
+  direction TB
+  SG1A["node"]
+end
+
+subgraph SG2[".sgSerif title"]
+  direction TB
+  SG2A["node"]
+end
+
+subgraph SG3[".sgMono title"]
+  direction TB
+  SG3A["node"]
+end
+
+subgraph SG4[".sgBig title"]
+  direction TB
+  SG4A["node"]
+end
+
+subgraph SG5[".sgBold title"]
+  direction TB
+  SG5A["node"]
+end
+
+SG0 --- SG1 --- SG2 --- SG3 --- SG4 --- SG5
+
+class SG1 sgSans;
+class SG2 sgSerif;
+class SG3 sgMono;
+class SG4 sgBig;
+class SG5 sgBold;
+
+%% ─────────────────────────────────────────────
+%% Class definitions (fonts)
+%% ─────────────────────────────────────────────
+classDef fontSans  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+classDef fontSerif font-family:Georgia,Times New Roman,Times,serif;
+classDef fontMono  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Courier New,monospace;
+
+classDef fontBig       font-size:20px;
+classDef fontSmall     font-size:11px;
+
+classDef fontBold      font-weight:700;
+classDef fontItalic    font-style:italic;
+classDef fontCaps      text-transform:uppercase,letter-spacing:0.06em;
+classDef fontUnderline text-decoration:underline;
+
+%% Mermaid/CSS support for letter-spacing/line-height varies by renderer;
+%% these often work in Mermaid Live + many Markdown renderers, but not all.
+classDef fontTight     letter-spacing:-0.02em,line-height:1.0;
+classDef fontLoose     letter-spacing:0.08em,line-height:1.35;
+
+%% Subgraph title font classes (same idea)
+classDef sgSans  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+classDef sgSerif font-family:Georgia,Times,serif;
+classDef sgMono  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+classDef sgBig   font-size:20px;
+classDef sgBold  font-weight:800;

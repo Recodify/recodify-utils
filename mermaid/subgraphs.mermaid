@@ -1,0 +1,37 @@
+
+flowchart TB
+
+subgraph SG1["Default subgraph"]
+    A1[Node]
+end
+
+subgraph SG2["Rounded subgraph"]
+    direction TB
+    A2[Node]
+end
+
+subgraph SG3["Dashed border"]
+    A3[Node]
+end
+
+subgraph SG4["Colored background"]
+    A4[Node]
+end
+
+subgraph SG5["No title"]
+    A5[Node]
+end
+
+
+subgraph SG6["Dashed border 2"]
+    A6[Node]
+end
+
+
+
+%% Styling
+style SG2 rx:10, ry:10
+style SG3 stroke-dasharray: 5 5
+style SG6 stroke-dasharray: 1 1
+style SG4 fill:#f0f8ff,stroke:#5b8def
+style SG5 fill:#ffffff,stroke:#999,stroke-width:1

@@ -1,0 +1,35 @@
+flowchart TB
+
+A["Solid"]
+B["Thick"]
+C["Dashed"]
+D["Dotted"]
+E["Arrow"]
+F["Double arrow"]
+G["No arrow"]
+H["Bidirectional"]
+I["Labeled"]
+J["Invisible spacer"]
+K["bi dashed"]
+
+A --> B
+B ==> C
+C -.-> D
+D -.- E
+E --> F
+F <--> G
+G --- H
+H -- text --> I
+I ~~~ J
+K <-.-> A
+
+
+
+
+G["bi solid"] <--> H["bi solid"]
+I["bi dashed"] <-.-> J["bi dashed"]
+K["bi dotted"] <-.->
+L["bi dotted"]
+
+M["labeled bi dashed"] <-. async .-> N["queue"]
+O["labeled bi dotted"] <-.- weak .-> P["cache"]
