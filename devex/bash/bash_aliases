@@ -4,7 +4,8 @@
 #----------------------------LS----------------------------------------
 
 # long listing, all files (including dotfiles), classify types, human-readable
-alias ll='ls -alFh'
+#alias ll='ls -alFh'
+alias ll='ls -AlFh --group-directories-first'
 # show all files except . and .. (good for quick scans)
 alias la='ls -A'
 # long listing, sorted by modified time, newest first, human-readable
@@ -34,6 +35,129 @@ lsf() {
 
 #----------------------------Cat----------------------------------------
 
+
+
+
+# catf - cat the Nth file matching pattern (via ls order)
+# Usage: catf [n] [ls options] [pattern...]
+# Examples:
+#   catf *.txt          # cat the 1st .txt file
+#   catf 3 *.json       # cat the 3rd .json file
+#   catf 2 -t *.log     # cat the 2nd newest .log file (ls -t)
+catf() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Usage: catf [n] [ls options] [pattern...]"
+        echo "Cat the Nth file from ls output (default n=1)."
+        echo ""
+        echo "Examples:"
+        echo "  catf *.txt          # cat the 1st .txt file"
+        echo "  catf 3 *.json       # cat the 3rd .json file"
+        echo "  catf 2 -t *.log     # cat the 2nd newest .log file"
+        return 0
+    fi
+
+    local n=1
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        n="$1"
+        shift
+    fi
+
+    if (( n < 1 )); then
+        echo "Error: n must be >= 1" >&2
+        return 2
+    fi
+
+    local file
+    file=$(ls "$@" 2>/dev/null | sed -n "${n}p")
+
+    if [[ -z "$file" ]]; then
+        echo "Error: no file found at position $n" >&2
+        return 1
+    elif [[ ! -f "$file" ]]; then
+        echo "Error: '$file' is not a regular file" >&2
+        return 1
+    fi
+
+    cat -- "$file"
+}
+# headf - head the first F files (via ls order), L lines each
+# Usage: headf [files=1] [lines=10] [ls options] [pattern...]
+# Examples:
+#   headf 3 20 *.json       # first 3 json files, 20 lines each
+#   headf 5 5 -t *.log      # 5 newest log files, 5 lines each
+headf() {
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "Usage: headf [files=1] [lines=10] [ls options] [pattern...]"
+    echo "Head the first 'files' files from ls output, printing 'lines' lines per file."
+    return 0
+  fi
+
+  local files=1 lines=10
+  if [[ "${1:-}" =~ ^[0-9]+$ ]]; then files="$1"; shift; fi
+  if [[ "${1:-}" =~ ^[0-9]+$ ]]; then lines="$1"; shift; fi
+
+  if (( files < 1 )); then echo "Error: files must be >= 1" >&2; return 2; fi
+  if (( lines < 0 )); then echo "Error: lines must be >= 0" >&2; return 2; fi
+
+  # Grab first N files from ls output
+  local -a list
+  mapfile -t list < <(ls "$@" 2>/dev/null | head -n "$files")
+
+  if (( ${#list[@]} == 0 )); then
+    echo "Error: no files found" >&2
+    return 1
+  fi
+
+  local f
+  for f in "${list[@]}"; do
+    if [[ -f "$f" ]]; then
+      printf '==> %s <==\n' "$f"
+      head -n "$lines" -- "$f"
+      echo
+    else
+      echo "Skipping: '$f' (not a regular file)" >&2
+    fi
+  done
+}
+
+# tailf - tail the first F files (via ls order), L lines each
+# Usage: tailf [files=1] [lines=10] [ls options] [pattern...]
+# Examples:
+#   tailf 3 50 *.log        # first 3 log files, last 50 lines each
+#   tailf 2 20 -t *.csv     # 2 newest csv files, last 20 lines each
+tailf() {
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "Usage: tailf [files=1] [lines=10] [ls options] [pattern...]"
+    echo "Tail the first 'files' files from ls output, printing 'lines' lines per file."
+    return 0
+  fi
+
+  local files=1 lines=10
+  if [[ "${1:-}" =~ ^[0-9]+$ ]]; then files="$1"; shift; fi
+  if [[ "${1:-}" =~ ^[0-9]+$ ]]; then lines="$1"; shift; fi
+
+  if (( files < 1 )); then echo "Error: files must be >= 1" >&2; return 2; fi
+  if (( lines < 0 )); then echo "Error: lines must be >= 0" >&2; return 2; fi
+
+  local -a list
+  mapfile -t list < <(ls "$@" 2>/dev/null | head -n "$files")
+
+  if (( ${#list[@]} == 0 )); then
+    echo "Error: no files found" >&2
+    return 1
+  fi
+
+  local f
+  for f in "${list[@]}"; do
+    if [[ -f "$f" ]]; then
+      printf '==> %s <==\n' "$f"
+      tail -n "$lines" -- "$f"
+      echo
+    else
+      echo "Skipping: '$f' (not a regular file)" >&2
+    fi
+  done
+}
 
 # catf - cat the first file matching pattern
 # Usage: catf [pattern]
