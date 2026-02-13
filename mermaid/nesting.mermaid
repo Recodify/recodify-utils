@@ -1,0 +1,91 @@
+flowchart TB
+
+%% ─────────────────────────────────────────────
+%% Outline Zoo: many container stroke patterns + colors
+%% Designed for dark themes + heavy nesting
+%% ─────────────────────────────────────────────
+
+subgraph L0["L0: DataLayer (solid slate)"]
+  direction TB
+
+  subgraph L1A["L1: Cluster boundary (cyan long-dash)"]
+    direction TB
+
+    subgraph L2A["L2: Azure region (blue dash-dot)"]
+      direction TB
+      A1["ClickHouse Node 3"]:::node
+      A2["CH Keeper"]:::nodeAlt
+    end
+
+    subgraph L2B["L2: On-Prem (teal medium-dash)"]
+      direction TB
+
+      subgraph L3B1["L3: DC2 (white dotted)"]
+        direction TB
+        B1["ClickHouse Node 2"]:::node
+        B2["CH Keeper"]:::nodeAlt
+      end
+
+      subgraph L3B2["L3: DC1 (pink short-dash)"]
+        direction TB
+        C1["ClickHouse Node 1"]:::node
+        C2["CH Keeper"]:::nodeAlt
+      end
+
+    end
+  end
+
+  subgraph L1B["L1: Postgres area (amber double-dash)"]
+    direction TB
+    P1[(Postgres)]:::db
+    N1["NOTE: HA?"]:::note
+  end
+end
+
+%% A couple of links so you can see dash contrast against edges too
+A2 -. coordinate .-> B2
+B1 -. replicate .-> C1
+P1 --> B1
+
+%% Apply classes to subgraphs (works in many renderers; if yours ignores, use `style` fallback)
+class L0 sgSolidSlate;
+class L1A sgCyanLong;
+class L2A sgBlueDashDot;
+class L2B sgTealMed;
+class L3B1 sgWhiteDots;
+class L3B2 sgPinkShort;
+class L1B sgAmberDouble;
+
+%% ─────────────────────────────────────────────
+%% Node styles (simple so the containers do the work)
+%% ─────────────────────────────────────────────
+classDef node    fill:#0b1220,stroke:#cbd5e1,stroke-width:1.2,color:#e5e7eb;
+classDef nodeAlt fill:#0b1220,stroke:#94a3b8,stroke-width:1.2,color:#e5e7eb;
+classDef db      fill:#052e16,stroke:#4ade80,stroke-width:1.5,color:#ecfdf5;
+classDef note    fill:#1e1b4b,stroke:#818cf8,stroke-dasharray:4 4,color:#e0e7ff,font-style:italic;
+
+%% ─────────────────────────────────────────────
+%% Container outline palette (mix patterns + colors)
+%% - Keep fills subtle; rely on border language
+%% - Dash arrays: "on off on off ..." (numbers are pixels)
+%% ─────────────────────────────────────────────
+
+%% Baseline / outer boundary (solid)
+classDef sgSolidSlate fill:#0b1220,stroke:#64748b,stroke-width:2,rx:14,ry:14;
+
+%% Long dash (great for “major boundary”)
+classDef sgCyanLong   fill:#020617,stroke:#38bdf8,stroke-width:2,stroke-dasharray:14 8,rx:12,ry:12;
+
+%% Dash-dot (reads different from plain dashed at a glance)
+classDef sgBlueDashDot fill:#020617,stroke:#60a5fa,stroke-width:2,stroke-dasharray:10 4 2 4,rx:12,ry:12;
+
+%% Medium dash (secondary boundary)
+classDef sgTealMed    fill:#020617,stroke:#2dd4bf,stroke-width:2,stroke-dasharray:8 6,rx:12,ry:12;
+
+%% Dots (tight dotted — good for “site / zone / rack”)
+classDef sgWhiteDots  fill:#020617,stroke:#e5e7eb,stroke-width:1.8,stroke-dasharray:2 6,rx:12,ry:12;
+
+%% Short dash (high-frequency boundary; use sparingly)
+classDef sgPinkShort  fill:#020617,stroke:#fb7185,stroke-width:2,stroke-dasharray:4 4,rx:12,ry:12;
+
+%% “Doub

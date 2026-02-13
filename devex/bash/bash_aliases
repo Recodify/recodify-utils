@@ -1,6 +1,8 @@
 #---------------------------USAGE ------------------------------------
 
 
+alias ode='code --disable-extensions'
+
 #----------------------------LS----------------------------------------
 
 # long listing, all files (including dotfiles), classify types, human-readable
@@ -472,6 +474,23 @@ cpx() {
   find "$src" -maxdepth "$maxDepth" -type "$type" -iname "$pattern" -exec cp -t "$dest" -- {} +
 }
 
+
+rsyncn() {
+  local N="${1:?usage: rsync_n N SRC DST}"
+  local src="${2:?usage: rsync_n N SRC DST}"
+  local dst="${3:?usage: rsync_n N SRC DST}"
+
+  # basic sanity
+  [[ "$N" =~ ^[0-9]+$ ]] || { echo "N must be an integer, got: $N" >&2; return 2; }
+  [[ -d "$src" ]] || { echo "SRC is not a directory: $src" >&2; return 2; }
+
+  mkdir -p "$dst" || return 1
+
+  find "$src" -maxdepth 1 -type f -printf '%P\0' \
+    | sort -z \
+    | head -z -n "$N" \
+    | rsync -0a --files-from=- "$src"/ "$dst"/
+}
 
 # Count files recursively, with optional path + max depth.
 # Usage:
