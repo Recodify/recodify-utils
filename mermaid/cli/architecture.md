@@ -6,8 +6,6 @@ The UnifiedIngestor system ingests high-volume CSV timeseries files, resolves lo
 
 **Core Innovation:** Bind series names to integer IDs at write time using a ClickHouse dictionary, allow unknown names to land with ID 0, then reconcile later with a background worker that replays only the unresolved rows. This deferred reconciliation pattern keeps the hot path fast while ensuring downstream tables remain keyed on integers with no query-time binding costs.
 
-!follow-up:previous-cool-name
-
 ## One Sentence Summary
 
 Ingest uses ClickHouse as a deterministic compiler and write-time binder, unresolved rows land with ID 0, and a background worker registers missing keys then re-emits only the unresolved subset so downstream tables remain keyed on integers and never pay query-time binding costs.
@@ -165,7 +163,9 @@ class Main sgNew;
 class Clickhouse,Consolidated,Con sgContainer
 class Alt sgNewDashsed
 class Hot sghot;
+
 ````
+
 **Notes**
 
 - This is the high-level sequential logical flow as implied from a C#-only ingest process

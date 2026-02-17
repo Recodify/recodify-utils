@@ -1,0 +1,35 @@
+---
+config:
+  theme: redux-dark
+---
+flowchart TB
+subgraph Invariance["Invariants"]
+    note2["
+        • This is what we're given and have to work with
+        • As a rule CSV is messy, ours is not an exception 
+    "]:::anno      
+    C[/Raw CSV/] 
+end
+subgraph Steps["Steps"]
+    direction LR
+    
+    note["
+        • These are the steps required to get data from CSV into ClickHouse
+        • However, we have options on the order they are done in
+        • The ordering makes a big difference in performance and implicit determinism
+    "]:::anno -.- ex
+    
+    subgraph ex["  "]
+        direction LR
+        N(["Normalise"]) 
+        
+        T(["Transform"]):::warning 
+        note3["This step (CSV to Parquet) is not a hard requirement for ingest into CH,
+        but it's still probably the best approach for determinism"]:::note
+        note3 ---- T
+        
+        E(["Enrich"]) 
+        R(["Register"]) 
+        I(["Ingest"]) 
+    end
+end

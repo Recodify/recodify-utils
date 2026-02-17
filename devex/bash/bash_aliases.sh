@@ -1,5 +1,9 @@
 #---------------------------USAGE ------------------------------------
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+alias showba="code ${SCRIPT_DIR}/bash_aliases"
+
+#----------------------------VS CODE----------------------------------------
 
 alias ode='code --disable-extensions'
 
@@ -36,8 +40,6 @@ lsf() {
 }
 
 #----------------------------Cat----------------------------------------
-
-
 
 
 # catf - cat the Nth file matching pattern (via ls order)
@@ -549,6 +551,14 @@ alias dockerstopall='docker stop $(docker ps -a -q)'
 d-restart() {
   d-down && d-up
 }
+
+#----------------------------APT--------------------------------------
+
+aptremove() {
+  apt remove $1
+  #apt autoremove --purge
+}
+
 #----------------------------TEXT--------------------------------------
 # strip ANSI escape codes (color codes etc) from text
 alias stripansi='sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"'
@@ -715,6 +725,10 @@ run_n_times_bg() {
 }
 
 #----------------------------NETWORK-----------------------------------
+
+alias hotspot-up='nmcli dev wifi hotspot ssid SamLAN password "usb3.0HUB"'
+
+
 # show listening ports with process names
 alias ports='netstat -tulpn'
 
