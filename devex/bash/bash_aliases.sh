@@ -726,7 +726,7 @@ run_n_times_bg() {
 
 #----------------------------NETWORK-----------------------------------
 
-alias hotspot-up='nmcli dev wifi hotspot ssid SamLAN password "usb3.0HUB"'
+alias hotspot-up='nmcli dev wifi hotspot ssid mobileLAN password "usb3.0HUB"'
 
 
 # show listening ports with process names
@@ -823,3 +823,22 @@ alias targzv='tar -czvf'
 
 # extract tar.gz with verbose output
 alias untargzv='tar -xzvf'
+
+
+#----------------------------ACCESSIBILITY----------------------------
+blind() {
+  SCALE_EXTERNAL="1.25"
+  SCALE_LAPTOP="1.0"
+
+  if xrandr --query | grep -q '^DP-5 connected'; then
+      current="$(gsettings get org.gnome.desktop.interface text-scaling-factor)"
+      if [ "$current" != "$SCALE_EXTERNAL" ]; then
+          gsettings set org.gnome.desktop.interface text-scaling-factor "$SCALE_EXTERNAL"
+      fi
+  else
+      current="$(gsettings get org.gnome.desktop.interface text-scaling-factor)"
+      if [ "$current" != "$SCALE_LAPTOP" ]; then
+          gsettings set org.gnome.desktop.interface text-scaling-factor "$SCALE_LAPTOP"
+      fi
+  fi
+}
