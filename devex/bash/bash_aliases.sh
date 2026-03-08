@@ -1,11 +1,23 @@
+#!/bin/bash
+
 #---------------------------USAGE ------------------------------------
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-alias showba="code ${SCRIPT_DIR}/bash_aliases"
+alias showba='code "${SCRIPT_DIR}"/bash_aliases'
 
 #----------------------------VS CODE----------------------------------------
 
 alias ode='code --disable-extensions'
+
+#----------------------------QoL----------------------------------------
+
+alias nanorc='nano ~/.bashrc'
+alias srcrc='. ~/.bashrc'
+
+editrc() {
+  nano ~/.bashrc
+  . ~/.bashrc
+}
 
 #----------------------------LS----------------------------------------
 
@@ -243,7 +255,47 @@ alias glg='git log --oneline --decorate --graph --all'
 # list untracked and unignore files in size desc order
 alias gitxl='git ls-files -o --exclude-standard | xargs du -h | sort -h'
 
+git-find-file() {
+    local pattern="$1"
 
+    if [[ -z "$pattern" ]]; then
+        echo "usage: git-find-file <filename-pattern>"
+        return 1
+    fi
+
+    git for-each-ref --format='%(refname:short)' refs/heads refs/remotes \
+    | while read -r branch; do
+        git ls-tree -r --name-only "$branch" \
+        | grep -i "$pattern" \
+        | sed "s|^|$branch: |"
+    done | sort -u
+}
+
+git-which-branch-has-file() {
+    local file="$1"
+
+    if [[ -z "$file" ]]; then
+        echo "usage: git-which-branch-has-file <filename>"
+        return 1
+    fi
+
+    git for-each-ref --format='%(refname:short)' refs/heads refs/remotes \
+    | while read -r branch; do
+        git ls-tree -r --name-only "$branch" \
+        | grep -qx "$file" && echo "$branch"
+    done
+}
+
+git-find-text() {
+    local pattern="$1"
+
+    if [[ -z "$pattern" ]]; then
+        echo "usage: git-find-text <text>"
+        return 1
+    fi
+
+    git grep -n --heading "$pattern" $(git for-each-ref --format='%(refname:short)' refs/heads refs/remotes)
+}
 
 #---------------------------SYMLINKS-----------------------------------
 # create symlink with clear syntax: symlink <target> <link_name>
@@ -275,7 +327,8 @@ lnhere() {
     return 1
   fi
   local target="$1"
-  local name=$(basename "$target")
+  local name
+  name=$(basename "$target")
   ln -s "$target" "$name"
   echo "Created: $name -> $target"
   ls -l "$name"
@@ -304,7 +357,8 @@ alias lnrm='unlink'
 
 # remove broken symlinks in current directory
 lnrmbroken() {
-  local broken=$(find . -maxdepth 1 -xtype l)
+  local broken
+  broken=$(find . -maxdepth 1 -xtype l)
   if [ -z "$broken" ]; then
     echo "No broken symlinks found"
     return 0
@@ -827,7 +881,7 @@ alias untargzv='tar -xzvf'
 
 #----------------------------ACCESSIBILITY----------------------------
 blind() {
-  SCALE_EXTERNAL="1.25"
+  SCALE_EXTERNAL="1.1"
   SCALE_LAPTOP="1.0"
 
   if xrandr --query | grep -q '^DP-5 connected'; then
