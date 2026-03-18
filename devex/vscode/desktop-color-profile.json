@@ -1,0 +1,59 @@
+{
+    "workbench.sideBar.location": "right",
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmPasteNative": false,
+    "explorer.confirmDelete": false,
+    "breadcrumbs.enabled": false,
+    "editor.stickyScroll.enabled": false,
+    "explorer.compactFolders": false,
+    "dotnet.preferVisualStudioCodeFileSystemWatcher": true,
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "workbench.preferredHighContrastColorTheme": "Visual Studio Dark",
+    "editor.minimap.enabled": false,
+    "editor.semanticHighlighting.enabled": true,
+    "workbench.colorCustomizations": {
+        "editorHoverWidget.background": "#0f0f0f",
+        "editorHoverWidget.foreground": "#d4d4d4",
+        "editorHoverWidget.border": "#1a1a1a",
+        "editorWidget.background": "#0f0f0f",
+        "editorWidget.border": "#1a1a1a",
+        "editor.background": "#0a0a0a",
+        "editorWhitespace.foreground": "#469c30",
+
+        "input.background": "#0f0f0f",
+        "input.foreground": "#d4d4d4",
+        "input.border": "#1a1a1a",
+        
+        "list.activeSelectionBackground": "#141414",
+        "list.activeSelectionForeground": "#ffffff",
+        "list.inactiveSelectionBackground": "#101010",
+        "list.inactiveSelectionForeground": "#d4d4d4",
+        "list.hoverBackground": "#1a1a1a",
+        "list.hoverForeground": "#ffffff",
+       
+        "titleBar.activeForeground": "#d4d4d4",
+        "titleBar.inactiveForeground": "#888888",       
+        "titleBar.activeBackground": "#0f0f0f",
+        "titleBar.inactiveBackground": "#0f0f0f",
+        
+        "menubar.selectionBackground": "#1a1a1a",
+        "menubar.selectionForeground": "#ffffff",        
+        "menubar.selectionBorder": "#00000000",
+        
+        "sideBar.background": "#0a0a0a",
+        "sideBar.border": "#1a1a1a",
+
+        "panel.background": "#0a0a0a",
+        "panel.border": "#1a1a1a",
+        
+        "terminal.background": "#0a0a0a",
+        
+        "activityBar.background": "#0f0f0f",
+        
+        "contrastBorder": "#00000000",        
+        "contrastActiveBorder": "#00000000",
+        
+        "focusBorder": "#007acc"                
+    },
+    "workbench.editor.enablePreview": false
+}

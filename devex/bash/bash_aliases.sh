@@ -2,12 +2,34 @@
 
 #---------------------------USAGE ------------------------------------
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-alias showba='code "${SCRIPT_DIR}"/bash_aliases'
+THIS="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+#alias showba='code "${THIS}"/bash_aliases/sh'
 
 #----------------------------VS CODE----------------------------------------
 
 alias ode='code --disable-extensions'
+
+
+
+#----------------------------ACCESSIBILITY----------------------------
+blind() {
+ SCALE_EXTERNAL="1.3"
+ # SCALE_EXTERNAL="1.1"
+  SCALE_LAPTOP="1.8"
+
+  if xrandr --query | grep -q '^DP-. connected'; then
+      current="$(gsettings get org.gnome.desktop.interface text-scaling-factor)"
+      if [ "$current" != "$SCALE_EXTERNAL" ]; then
+          gsettings set org.gnome.desktop.interface text-scaling-factor "$SCALE_EXTERNAL"
+      fi
+  else
+      current="$(gsettings get org.gnome.desktop.interface text-scaling-factor)"
+      if [ "$current" != "$SCALE_LAPTOP" ]; then
+          gsettings set org.gnome.desktop.interface text-scaling-factor "$SCALE_LAPTOP"
+      fi
+  fi
+}
+
 
 #----------------------------QoL----------------------------------------
 
@@ -19,6 +41,19 @@ editrc() {
   . ~/.bashrc
 }
 
+alias nanoal='nano "${THIS}"/bash_aliases.sh'
+alias srcal='. "${THIS}"/bash_aliases.sh'
+
+edital() {
+  nanoal
+  srcal
+}
+
+alias nanoai='nano /home/${USER}/.codex/AGENTS.md'
+
+editai() {
+  nanoai
+}
 #----------------------------LS----------------------------------------
 
 # long listing, all files (including dotfiles), classify types, human-readable
@@ -49,6 +84,35 @@ lsf() {
         return 0
     fi
     ls "$@" | head -n 1
+}
+
+#----------------------------Find----------------------------------------
+fhead() {
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "Usage: fhead [pattern] [n]"
+    echo "Find files matching pattern and show the head of each"
+    echo ""
+    echo "Examples:"
+    echo "  fhead '*.txt'"
+    echo "  fhead test.json"
+    echo "  fhead test.json 25"
+    return 0
+  fi
+
+  if [[ -z "$1" ]]; then
+    echo "Error: pattern required"
+    return 1
+  fi
+
+  local term="$1"
+  local n="${2:-10}"
+
+  find . -type f -iname "$term" 2>/dev/null -print0 |
+  while IFS= read -r -d '' file; do
+      printf '===== %s =====\n' "$file"
+      head -n "$n" "$file"
+      echo
+  done
 }
 
 #----------------------------Cat----------------------------------------
@@ -101,41 +165,6 @@ catf() {
 # Examples:
 #   headf 3 20 *.json       # first 3 json files, 20 lines each
 #   headf 5 5 -t *.log      # 5 newest log files, 5 lines each
-headf() {
-  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    echo "Usage: headf [files=1] [lines=10] [ls options] [pattern...]"
-    echo "Head the first 'files' files from ls output, printing 'lines' lines per file."
-    return 0
-  fi
-
-  local files=1 lines=10
-  if [[ "${1:-}" =~ ^[0-9]+$ ]]; then files="$1"; shift; fi
-  if [[ "${1:-}" =~ ^[0-9]+$ ]]; then lines="$1"; shift; fi
-
-  if (( files < 1 )); then echo "Error: files must be >= 1" >&2; return 2; fi
-  if (( lines < 0 )); then echo "Error: lines must be >= 0" >&2; return 2; fi
-
-  # Grab first N files from ls output
-  local -a list
-  mapfile -t list < <(ls "$@" 2>/dev/null | head -n "$files")
-
-  if (( ${#list[@]} == 0 )); then
-    echo "Error: no files found" >&2
-    return 1
-  fi
-
-  local f
-  for f in "${list[@]}"; do
-    if [[ -f "$f" ]]; then
-      printf '==> %s <==\n' "$f"
-      head -n "$lines" -- "$f"
-      echo
-    else
-      echo "Skipping: '$f' (not a regular file)" >&2
-    fi
-  done
-}
-
 # tailf - tail the first F files (via ls order), L lines each
 # Usage: tailf [files=1] [lines=10] [ls options] [pattern...]
 # Examples:
@@ -253,7 +282,9 @@ alias gl='git log -1 --oneline --decorate'
 alias glg='git log --oneline --decorate --graph --all'
 
 # list untracked and unignore files in size desc order
-alias gitxl='git ls-files -o --exclude-standard | xargs du -h | sort -h'
+alias gitxlx='git ls-files -o --exclude-standard -z | xargs -0 -r du -h | sort -h -r'
+alias gitxl='git ls-files -z | xargs -0 stat --printf="%s\t%n\n" | sort -n -r'
+alias gitxla='git ls-files --others --ignored --exclude-standard -z | xargs -0 -r du -h | sort -h -r'
 
 git-find-file() {
     local pattern="$1"
@@ -879,20 +910,3 @@ alias targzv='tar -czvf'
 alias untargzv='tar -xzvf'
 
 
-#----------------------------ACCESSIBILITY----------------------------
-blind() {
-  SCALE_EXTERNAL="1.1"
-  SCALE_LAPTOP="1.0"
-
-  if xrandr --query | grep -q '^DP-5 connected'; then
-      current="$(gsettings get org.gnome.desktop.interface text-scaling-factor)"
-      if [ "$current" != "$SCALE_EXTERNAL" ]; then
-          gsettings set org.gnome.desktop.interface text-scaling-factor "$SCALE_EXTERNAL"
-      fi
-  else
-      current="$(gsettings get org.gnome.desktop.interface text-scaling-factor)"
-      if [ "$current" != "$SCALE_LAPTOP" ]; then
-          gsettings set org.gnome.desktop.interface text-scaling-factor "$SCALE_LAPTOP"
-      fi
-  fi
-}
