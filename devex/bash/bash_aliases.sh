@@ -282,9 +282,9 @@ alias gl='git log -1 --oneline --decorate'
 alias glg='git log --oneline --decorate --graph --all'
 
 # list untracked and unignore files in size desc order
-alias gitxlx='git ls-files -o --exclude-standard -z | xargs -0 -r du -h | sort -h -r'
-alias gitxl='git ls-files -z | xargs -0 stat --printf="%s\t%n\n" | sort -n -r'
-alias gitxla='git ls-files --others --ignored --exclude-standard -z | xargs -0 -r du -h | sort -h -r'
+alias gitxlx='git ls-files -o --exclude-standard -z | xargs -0 -r du -h | sort -h'
+alias gitxl='git ls-files -z | xargs -0  du -h | sort -h'
+alias gitxla='git ls-files --others --ignored --exclude-standard -z | xargs -0 -r du -h | sort -h'
 
 git-find-file() {
     local pattern="$1"
