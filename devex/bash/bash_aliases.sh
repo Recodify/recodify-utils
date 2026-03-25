@@ -13,7 +13,7 @@ alias ode='code --disable-extensions'
 
 #----------------------------ACCESSIBILITY----------------------------
 blind() {
- SCALE_EXTERNAL="1.3"
+ SCALE_EXTERNAL="1.1"
  # SCALE_EXTERNAL="1.1"
   SCALE_LAPTOP="1.8"
 
@@ -509,8 +509,37 @@ csv_wc_count() {
   cd "$oldpwd" || true
 }
 
+parquet_duck_count ()
+{
+    local dir="${1:-.}";
+    local sum=${2:-1};
+    if [[ ! -d "$dir" ]]; then
+        echo "parquet_duck_count: not a directory: $dir" 1>&2;
+        return 1;
+    fi;
+    local file_count;
+    file_count=$(find "$dir" -maxdepth 1 -type f -name '*.parquet' -print | wc -l);
+    if [[ "$file_count" -eq 0 ]]; then
+        echo "Dir: $dir";
+        echo "Total rows: 0";
+        echo "Total files: 0";
+        return 0;
+    fi;
+    if ! command -v duckdb > /dev/null 2>&1; then
+        echo "parquet_duck_count: duckdb not found on PATH" 1>&2;
+        return 1;
+    fi;
+    if [ $sum -eq 1 ]; then
+        echo "Dir: $dir";
+        duckdb -c "SELECT COUNT(*) AS rows FROM read_parquet('${dir%/}/*.parquet');";
+    else
+        duckdb -c "SELECT filename, COUNT(*) AS rows FROM read_parquet('${dir%/}/*.parquet', filename=true) GROUP BY filename ORDER BY filename;";
+    fi;
+    echo "Total files: $file_count"
+}
+
 # Count total rows across Parquet files in a directory using DuckDB
-parquet_duck_count() {
+parquet_duck_count_old() {
   local dir="${1:-.}"
 
   if [[ ! -d "$dir" ]]; then
