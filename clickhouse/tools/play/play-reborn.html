@@ -443,6 +443,19 @@
             line-height: 1;
         }
 
+        .navigator-connection-status
+        {
+            padding: 0.12rem 0.35rem;
+            border: 1px solid currentColor;
+            color: inherit;
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.85;
+            white-space: nowrap;
+        }
+
         .navigator-node-meta
         {
             color: var(--misc-text-color);
@@ -867,6 +880,56 @@
             /* When a page will be scrolled horizontally due to large table size, keep controls in place. */
             position: sticky;
             left: 0;
+        }
+
+        .active-connection-banner
+        {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 0.35rem 0.75rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.55rem 0.75rem;
+            border: 1px solid var(--navigator-card-border);
+            background: var(--navigator-card-header-active);
+        }
+
+        .active-connection-label
+        {
+            color: var(--misc-text-color);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .active-connection-summary
+        {
+            min-width: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem 0.75rem;
+            align-items: baseline;
+        }
+
+        .active-connection-name
+        {
+            flex: 0 1 auto;
+            min-width: 0;
+            font-size: 0.98rem;
+            font-weight: 700;
+        }
+
+        .active-connection-meta
+        {
+            flex: 1 1 18rem;
+            min-width: 0;
+            color: var(--misc-text-color);
+            font-size: 0.84rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* Otherwise Webkit based browsers will display ugly border on focus. */
@@ -1625,6 +1688,13 @@
                 <input name="user" spellcheck="false" class="monospace shadow" id="user" type="text" value="default" placeholder="user">
                 <input name="password" class="monospace shadow" id="password" type="password" placeholder="password">
             </div>
+            <div id="active-connection-banner" class="active-connection-banner" role="status" aria-live="polite">
+                <div class="active-connection-label">Active connection</div>
+                <div class="active-connection-summary">
+                    <div id="active-connection-name" class="active-connection-name">No active connection</div>
+                    <div id="active-connection-meta" class="active-connection-meta monospace">Select a connection in the navigator to run queries.</div>
+                </div>
+            </div>
             <div id="query_div"><textarea autofocus="" spellcheck="false" autocorrect="false" autocomplete="false" data-gramm="false" class="monospace shadow" id="query"></textarea><div class="textarea-resizer"></div></div>
             <div id="run_div">
                 <button type="submit" class="shadow" id="run">Run</button>
@@ -1752,6 +1822,9 @@ let connection_user_input_elem = document.getElementById('connection-user');
 let connection_password_input_elem = document.getElementById('connection-password');
 let connection_editor_save_elem = document.getElementById('connection-editor-save');
 let connection_editor_cancel_elem = document.getElementById('connection-editor-cancel');
+let active_connection_banner_elem = document.getElementById('active-connection-banner');
+let active_connection_name_elem = document.getElementById('active-connection-name');
+let active_connection_meta_elem = document.getElementById('active-connection-meta');
 let navigator_footer_primary_elem = document.getElementById('navigator-footer-primary');
 let results_tabs_elem = document.getElementById('results_tabs');
 let results_panels_elem = document.getElementById('results_panels');
@@ -2114,6 +2187,19 @@ function updateNavigatorFooter(connection = null) {
     navigator_footer_primary_elem.title = `${connection.name}\n${connection.user || 'default'} @ ${connection.url || ''}`;
 }
 
+function updateActiveConnectionBanner(connection = null) {
+    if (!connection) {
+        active_connection_name_elem.innerText = 'No active connection';
+        active_connection_meta_elem.innerText = 'Select a connection in the navigator to run queries.';
+        active_connection_banner_elem.title = '';
+        return;
+    }
+
+    active_connection_name_elem.innerText = connection.name || 'Connection';
+    active_connection_meta_elem.innerText = formatConnectionSummary(connection);
+    active_connection_banner_elem.title = `${connection.name || 'Connection'}\n${connection.user || 'default'} @ ${connection.url || ''}`;
+}
+
 function openConnectionEditor(connection = null) {
     const draft = connection ? { ...connection } : createConnection(`Connection ${getSavedConnections().length + 1}`);
     connection_editor_state = { id: draft.id };
@@ -2308,6 +2394,13 @@ function renderNavigatorTree() {
             applyConnection(connection);
         });
 
+        let current_badge = null;
+        if (connection.id == current_connection_id) {
+            current_badge = document.createElement('span');
+            current_badge.className = 'navigator-connection-status';
+            current_badge.innerText = 'Active';
+        }
+
         const meta = document.createElement('div');
         meta.className = 'navigator-node-meta monospace';
         meta.innerText = formatConnectionSummary(connection);
@@ -2329,6 +2422,9 @@ function renderNavigatorTree() {
 
         header.appendChild(toggle);
         header.appendChild(button);
+        if (current_badge) {
+            header.appendChild(current_badge);
+        }
         header.appendChild(menu_button);
         connection_node.appendChild(header);
         connection_node.appendChild(meta);
@@ -2542,6 +2638,7 @@ function applyConnection(connection) {
     window.localStorage.setItem(active_connection_key, current_connection_id);
     setConnectionExpanded(current_connection_id, true);
     updateNavigatorFooter(connection);
+    updateActiveConnectionBanner(connection);
 
     url_elem.value = connection.url || '';
     user_elem.value = connection.user || 'default';
