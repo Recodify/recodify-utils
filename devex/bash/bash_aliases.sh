@@ -13,9 +13,9 @@ alias ode='code --disable-extensions'
 
 #----------------------------ACCESSIBILITY----------------------------
 blind() {
- SCALE_EXTERNAL="1.1"
+ SCALE_EXTERNAL="1.2"
  # SCALE_EXTERNAL="1.1"
-  SCALE_LAPTOP="1.8"
+  SCALE_LAPTOP="1.6"
 
   if xrandr --query | grep -q '^DP-. connected'; then
       current="$(gsettings get org.gnome.desktop.interface text-scaling-factor)"
@@ -840,7 +840,7 @@ run_n_times_bg() {
 
 #----------------------------NETWORK-----------------------------------
 
-alias hotspot-up='nmcli dev wifi hotspot ssid mobileLAN password "usb3.0HUB"'
+alias hotspot-up='nmcli dev wifi hotspot ssid RLAN password "usb3.0HUB"'
 
 
 # show listening ports with process names
