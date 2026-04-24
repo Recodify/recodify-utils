@@ -1,9 +1,0 @@
-eeee56ebf960d9ae77ded253682abe6ea5976005	refs/heads/base
-9b8de2795860136c6e536783c625b47dcc25e9f4	refs/heads/dev
-dc9a35889c754206f6115ced3d6caeb957f5a7ec	refs/heads/ss-ingestor-metrics
-066fc49145d1d46a3dd3cf8d822bdfca6ceef7c7	refs/heads/ss-mtime-mitigation
-b7cf45874a27dfc794cb76a25d36fd86a66f790f	refs/heads/ss-mtime-mitigation-0424
-a75fff25ba9a87dee3a66adcd092ea8b0501df37	refs/pull/3/head
-066fc49145d1d46a3dd3cf8d822bdfca6ceef7c7	refs/pull/4/head
-b7cf45874a27dfc794cb76a25d36fd86a66f790f	refs/pull/5/head
-46d0c95098a93d62fdfdbabe7823edf8ac182d43	refs/remotes/base/dev
