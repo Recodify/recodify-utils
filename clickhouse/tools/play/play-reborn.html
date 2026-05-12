@@ -1417,6 +1417,7 @@
         {
             color: var(--misc-text-color);
             margin-bottom: 0.5rem;
+            overflow: hidden;
         }
 
         .result-query
@@ -1424,6 +1425,17 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            max-width: 100%;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .result-query.expanded
+        {
+            white-space: pre-wrap;
+            text-overflow: unset;
+            max-height: 12em;
+            overflow-y: auto;
         }
 
         #action_history
@@ -1451,6 +1463,35 @@
         #action-table
         {
             width: 100%;
+            table-layout: fixed;
+        }
+
+        #action-table th:nth-child(1) { width: 2rem; }
+        #action-table th:nth-child(2) { width: 3rem; }
+        #action-table th:nth-child(3) { width: 7rem; }
+        #action-table th:nth-child(4) { /* Action - takes remaining space */ }
+        #action-table th:nth-child(5) { width: 5.5rem; }
+        #action-table th:nth-child(6) { width: 3rem; }
+
+        #action-table .action-cell
+        {
+            max-height: 3.6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            white-space: pre-wrap;
+            word-break: break-all;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        #action-table .action-cell.expanded
+        {
+            max-height: none;
+            -webkit-line-clamp: unset;
+            display: block;
         }
 
         #data_div, .data-div
@@ -3124,6 +3165,8 @@ function createResultPanel(requestNum, query) {
     };
 
     elements.result_query.innerText = query;
+    elements.result_query.title = 'Click to expand/collapse query';
+    elements.result_query.addEventListener('click', () => elements.result_query.classList.toggle('expanded'));
     results_tabs_elem.appendChild(tab);
     results_panels_elem.appendChild(panel);
     document.getElementById('logo-container').style.display = 'none';
@@ -3187,7 +3230,7 @@ function renderActionHistory() {
             <td class="row-number">${entry.request_num}</td>
             <td>${entry.ok ? '✔' : '✘'}</td>
             <td>${entry.connection_name}</td>
-            <td>${entry.query.replace(/</g, '&lt;')}</td>
+            <td><div class="action-cell" title="${entry.query.replace(/"/g, '&quot;').replace(/</g, '&lt;')}">${entry.query.replace(/</g, '&lt;')}</div></td>
             <td>${entry.message.replace(/</g, '&lt;')}</td>
             <td>${(entry.stats || '-').replace(/</g, '&lt;')}</td>
         </tr>
@@ -3195,6 +3238,13 @@ function renderActionHistory() {
 
     for (const row of action_body.querySelectorAll('tr[data-result-id]')) {
         row.addEventListener('click', () => activateResultPanel(row.dataset.resultId));
+        const actionCell = row.querySelector('.action-cell');
+        if (actionCell) {
+            actionCell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                actionCell.classList.toggle('expanded');
+            });
+        }
     }
 }
 
