@@ -1,0 +1,2 @@
+host,ssh_alias,role,env,want_cpu,want_ram,want_disk,clickhouse_user,clickhouse_password
+hostname,dev1,database,Dev,8,64,5000,username,
