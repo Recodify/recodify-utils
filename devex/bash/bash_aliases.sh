@@ -36,6 +36,14 @@ blind() {
 alias nanorc='nano ~/.bashrc'
 alias srcrc='. ~/.bashrc'
 
+cpath() {
+    local path
+    path="$(realpath "$1")" || return 1
+
+    printf "%s" "$path" | xsel --clipboard --input
+    echo "$path"
+}
+
 editrc() {
   nano ~/.bashrc
   . ~/.bashrc
