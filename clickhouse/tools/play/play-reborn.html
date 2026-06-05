@@ -3782,6 +3782,65 @@ let header = {};
 
 const default_format = 'JSONStringsEachRowWithProgress';
 
+function getClickHouseSummary(response) {
+    const summary = response?.headers?.get('X-ClickHouse-Summary');
+    if (!summary) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(summary);
+    } catch (e) {
+        return null;
+    }
+}
+
+function formatClickHouseSummary(summary) {
+    const read_rows = Number(summary.read_rows || 0);
+    const read_bytes = Number(summary.read_bytes || 0);
+    const written_rows = Number(summary.written_rows || 0);
+    const written_bytes = Number(summary.written_bytes || 0);
+    const summary_elapsed_ns = Number(summary.elapsed_ns || 0);
+    const parts = [];
+
+    if (read_rows || read_bytes) {
+        parts.push(`Read ${formatReadableRows(read_rows)} rows, ${formatReadableBytes(read_bytes)}`);
+    }
+    if (written_rows || written_bytes) {
+        parts.push(`Wrote ${formatReadableRows(written_rows)} rows, ${formatReadableBytes(written_bytes)}`);
+    }
+    if (summary_elapsed_ns) {
+        parts.push(`${(summary_elapsed_ns / 1e9).toFixed(2)} sec.`);
+    }
+
+    return parts.join(', ');
+}
+
+function applyClickHouseSummary(response) {
+    const summary = getClickHouseSummary(response);
+    if (!summary) {
+        return false;
+    }
+
+    if (summary.elapsed_ns) {
+        elapsed_ns = Number(summary.elapsed_ns);
+    }
+
+    const text = formatClickHouseSummary(summary);
+    if (!text) {
+        return false;
+    }
+
+    document.getElementById('stats').innerText = text;
+    if (current_result_meta) {
+        current_result_meta.stats = text;
+    }
+    if (current_result_elements?.result_stats) {
+        current_result_elements.result_stats.innerText = text;
+    }
+    return true;
+}
+
 let controller = null;
 async function postImpl(posted_request_num, query)
 {
@@ -3868,10 +3927,35 @@ async function postImpl(posted_request_num, query)
             const decoder = new TextDecoder();
 
             let buffer = '';
+            const updateDefaultFormatLine = (line, fragment, append_raw_newline) => {
+                if (!line.trim()) {
+                    return true;
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(line);
+                } catch (e) {
+                    is_table = false;
+                    is_raw = true;
+                    updateRaw(append_raw_newline ? `${line}\n` : line);
+                    return true;
+                }
+
+                return update(data, fragment);
+            };
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (posted_request_num != request_num) { return; }
-                if (done) break;
+                if (done) {
+                    const trailing_content = decoder.decode();
+                    if (trailing_content) {
+                        buffer += trailing_content;
+                        reply += trailing_content;
+                    }
+                    break;
+                }
 
                 let new_content = decoder.decode(value, { stream: true });
                 buffer += new_content;
@@ -3881,9 +3965,8 @@ async function postImpl(posted_request_num, query)
                 let fragment = document.createDocumentFragment();
 
                 let cont = true;
-                for (line of lines.slice(0, -1)) {
-                    const data = JSON.parse(line);
-                    cont = update(data, fragment);
+                for (const line of lines.slice(0, -1)) {
+                    cont = updateDefaultFormatLine(line, fragment, true);
                     if (!cont) { break; }
                 }
 
@@ -3897,6 +3980,17 @@ async function postImpl(posted_request_num, query)
                     break;
                 }
                 buffer = lines[lines.length - 1];
+            }
+
+            if (buffer.trim()) {
+                let fragment = document.createDocumentFragment();
+                const cont = updateDefaultFormatLine(buffer, fragment, false);
+                if (fragment.hasChildNodes()) {
+                    getCurrentTbody()?.appendChild(fragment);
+                }
+                if (!cont) {
+                    controller.abort();
+                }
             }
         } else if (format == 'JSONCompactColumns') {
             is_chart = true;
@@ -3965,10 +4059,11 @@ async function postImpl(posted_request_num, query)
     document.getElementById('download-div').style.display = 'block';
     last_query_for_download = query;
 
-    if (is_raw) {
+    if (is_raw || !elapsed_ns) {
         elapsed_ns = 1e6 * (performance.now() - last_query_start);
     }
 
+    applyClickHouseSummary(response);
     updateProgressText();
     document.documentElement.style.setProperty('--progress', '0');
     document.documentElement.style.setProperty('--background-color-rotate', queryToColor(query));

@@ -13,7 +13,7 @@ alias ode='code --disable-extensions'
 
 #----------------------------ACCESSIBILITY----------------------------
 blind() {
- SCALE_EXTERNAL="1.2"
+ SCALE_EXTERNAL="1.3"
  # SCALE_EXTERNAL="1.1"
   SCALE_LAPTOP="1.6"
 
@@ -35,6 +35,10 @@ blind() {
 
 alias nanorc='nano ~/.bashrc'
 alias srcrc='. ~/.bashrc'
+
+sett() {
+    printf '\033]0;%s\007' "$*"
+}
 
 cpath() {
     local path
@@ -62,6 +66,15 @@ alias nanoai='nano /home/${USER}/.codex/AGENTS.md'
 editai() {
   nanoai
 }
+
+#----------------------------ENV---------------------------------------
+
+srcenv(){
+  set -a
+  . $1
+  set +a
+}
+
 #----------------------------LS----------------------------------------
 
 # long listing, all files (including dotfiles), classify types, human-readable
@@ -667,11 +680,55 @@ stat-count() {
 #----------------------------DOCKER------------------------------------
 # list all running containers with better formatting
 alias dockerps='docker ps --format "{{.Names}}\t\t{{.Status}}"'
+
 # stop all running containers
 alias dockerstopall='docker stop $(docker ps -a -q)'
 
-d-restart() {
-  d-down && d-up
+docker-rm() {
+    if [[ $# -ne 1 ]]; then
+        echo "Usage: drm '<pattern>'"
+        echo "Example: drm '77a75-'"
+        return 1
+    fi
+
+    local pattern="$1"
+
+    echo "=== Matching containers ==="
+
+    local containers
+    containers=$(docker ps -aq --filter "name=${pattern}")
+
+    if [[ -n "$containers" ]]; then
+        docker ps -a --filter "name=${pattern}"
+
+        echo
+        echo "=== Stopping containers ==="
+        docker stop $containers >/dev/null || true
+
+        echo "=== Removing containers ==="
+        docker rm $containers >/dev/null || true
+    else
+        echo "No matching containers."
+    fi
+
+    echo
+    echo "=== Matching networks ==="
+
+    local networks
+    networks=$(docker network ls --format '{{.Name}}' | grep "^${pattern}" || true)
+
+    if [[ -n "$networks" ]]; then
+        echo "$networks"
+
+        echo
+        echo "=== Removing networks ==="
+        echo "$networks" | xargs -r docker network rm
+    else
+        echo "No matching networks."
+    fi
+
+    echo
+    echo "Done."
 }
 
 #----------------------------APT--------------------------------------
