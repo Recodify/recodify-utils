@@ -3927,6 +3927,7 @@ async function postImpl(posted_request_num, query)
             const decoder = new TextDecoder();
 
             let buffer = '';
+            let stream_aborted = false;
             const updateDefaultFormatLine = (line, fragment, append_raw_newline) => {
                 if (!line.trim()) {
                     return true;
@@ -3942,7 +3943,7 @@ async function postImpl(posted_request_num, query)
                     return true;
                 }
 
-                return update(data, fragment);
+                return update(data, fragment) !== false;
             };
 
             while (true) {
@@ -3976,13 +3977,14 @@ async function postImpl(posted_request_num, query)
 
                 if (!cont)
                 {
+                    stream_aborted = true;
                     controller.abort();
                     break;
                 }
                 buffer = lines[lines.length - 1];
             }
 
-            if (buffer.trim()) {
+            if (!stream_aborted && buffer.trim()) {
                 let fragment = document.createDocumentFragment();
                 const cont = updateDefaultFormatLine(buffer, fragment, false);
                 if (fragment.hasChildNodes()) {
@@ -4156,9 +4158,9 @@ async function restoreFromHistory(state) {
         let lines = state.data.split('\n');
         let fragment = document.createDocumentFragment();
 
-        for (line of lines) {
+        for (const line of lines) {
             if (line.length == 0) continue;
-            if (!update(JSON.parse(line), fragment)) { break; }
+            if (update(JSON.parse(line), fragment) === false) { break; }
         }
 
         if (fragment.hasChildNodes()) {
@@ -4602,6 +4604,8 @@ function update(json, fragment) {
         renderError(json.exception);
         return true;
     }
+
+    return true;
 }
 
 function updateRaw(data) {
