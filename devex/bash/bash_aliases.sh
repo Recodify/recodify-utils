@@ -5,9 +5,44 @@
 THIS="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 #alias showba='code "${THIS}"/bash_aliases/sh'
 
+if [[ -f "${THIS}/clickhouse_helper.sh" ]]; then
+  . "${THIS}/clickhouse_helper.sh"
+fi
+
 #----------------------------VS CODE----------------------------------------
 
 alias ode='code --disable-extensions'
+
+#----------------------------CODEX------------------------------------------
+
+codex-title () {
+   tr -d '\000' < "$HOME/.codex/session_index.jsonl" |
+     jq -Rr 'fromjson? | .thread_name // empty' |
+     tail -n 1
+}
+
+codext () {
+  local title_pid status
+
+  (
+    while :; do
+      title="$(codex-title)"
+      [ -n "$title" ] && printf '\033]0;%s\007' "codex: $title" > /dev/tty
+      sleep 1
+    done
+  ) &
+  title_pid=$!
+
+  command codex "$@"
+  status=$?
+
+  kill "$title_pid" 2>/dev/null
+  wait "$title_pid" 2>/dev/null
+
+  printf '\033]0;%s\007' "${PWD##*/}" > /dev/tty
+  return "$status"
+}
+
 
 
 
@@ -35,7 +70,7 @@ blind() {
 
 alias nanorc='nano ~/.bashrc'
 alias srcrc='. ~/.bashrc'
-
+export SCRATCH=/home/shiles/scratch
 sett() {
     printf '\033]0;%s\007' "$*"
 }
@@ -46,6 +81,31 @@ cpath() {
 
     printf "%s" "$path" | xsel --clipboard --input
     echo "$path"
+}
+
+cx() {
+  local file="${1:-$SCRATCH}"
+  {
+        xsel --clipboard --output
+        printf '\n'
+  } >> "$file"
+}
+
+cv()
+{
+    local file="${1:-$SCRATCH}"
+
+    [[ -f "$file" ]] || {
+        echo "File not found: $file" >&2
+        return 1
+    }
+
+    xsel --clipboard --input < "$file"
+}
+
+cleanx(){
+ cat $SCRATCH >> /home/shiles/scratch.history
+ rm $SCRATCH
 }
 
 editrc() {
@@ -65,6 +125,18 @@ alias nanoai='nano /home/${USER}/.codex/AGENTS.md'
 
 editai() {
   nanoai
+}
+
+editx() {
+ nano $SCRATCH
+}
+
+cpathx() {
+ cpath $SCRATCH
+}
+
+cats() {
+ cat $SCRATCH
 }
 
 #----------------------------ENV---------------------------------------
@@ -969,6 +1041,10 @@ alias meminfo='free -h'
 # watch command with 1 second interval
 alias watch1='watch -n 1'
 
+statmod(){
+ stat -c '%a %n' "$@"
+}
+
 #----------------------------TAR & ARCHIVES----------------------------
 # create tar.gz archive: targz archive-name.tar.gz folder/
 alias targz='tar -czf'
@@ -1002,5 +1078,4 @@ alias targzv='tar -czvf'
 
 # extract tar.gz with verbose output
 alias untargzv='tar -xzvf'
-
 
